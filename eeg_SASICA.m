@@ -516,13 +516,19 @@ if cfg.ADJUST.enable
     struct2ws(cfg.ADJUST);
 
     [art, horiz, vert, blink, disc,...
-        soglia_DV, diff_var, soglia_K, meanK, soglia_SED, SED, soglia_SAD, SAD, ...
-        soglia_GDSF, GDSF, soglia_V, maxvar, soglia_D, maxdin] = ADJUST (EEG);
+        soglia_DV, diff_var, soglia_K, med2_K, meanK, soglia_SED, med2_SED, SED, soglia_SAD, med2_SAD, SAD, ...
+        soglia_GDSF, med2_GDSF, GDSF, soglia_V, med2_V, nuovaV, soglia_D, maxdin] = ADJUST (EEG);
+    
     ADJ.art = art;ADJ.horiz = horiz;ADJ.vert = vert;ADJ.blink = blink;ADJ.disc = disc;
-    ADJ.soglia_DV = soglia_DV; ADJ.diff_var = diff_var; ADJ.soglia_K = soglia_K;
-    ADJ.meanK = meanK; ADJ.soglia_SED = soglia_SED; ADJ.SED = SED; ADJ.soglia_SAD = soglia_SAD;
-    ADJ.SAD = SAD; ADJ.soglia_GDSF = soglia_GDSF; ADJ.GDSF = GDSF; ADJ.soglia_V = soglia_V;
-    ADJ.maxvar = maxvar; ADJ.soglia_D = soglia_D; ADJ.maxdin = maxdin;
+    
+    ADJ.soglia_DV = soglia_DV; ADJ.diff_var = diff_var; 
+    ADJ.soglia_K = soglia_K;ADJ.med2_K = med2_K; ADJ.meanK = meanK; 
+    ADJ.soglia_SED = soglia_SED; ADJ.med2_SED = med2_SED;ADJ.SED = SED;
+    ADJ.med2_SAD = med2_SAD;ADJ.soglia_SAD = soglia_SAD;ADJ.SAD = SAD;
+    ADJ.soglia_GDSF = soglia_GDSF; ADJ.med2_GDSF = med2_GDSF;ADJ.GDSF = GDSF;
+    ADJ.soglia_V = soglia_V;ADJ.med2_V = med2_V;ADJ.nuovaV = nuovaV;
+    ADJ.soglia_D = soglia_D; ADJ.maxdin = maxdin;
+    
     rej = false(1,size(EEG.icaact,1));
     rej([ADJ.art ADJ.horiz ADJ.vert ADJ.blink ADJ.disc]) = true;
 
@@ -1318,17 +1324,7 @@ else
 end
 
 % Check the presence of ICA activations
-
-if isempty(EEG.icaact)
-    disp('EEG.icaact not present. Recomputed from data.');
-    if length(size(EEG.data))==3
-%         EEG.icaact = EEG.icaweights*EEG.icasphere*reshape(EEG.data, size(EEG.icawinv,1), num_epoch*size(EEG.data,2));
-%         EEG.icaact = reshape(EEG.icaact,size(EEG.icawinv,1),size(EEG.data,2), num_epoch);
-         EEG.icaact = reshape(EEG.icaweights*EEG.icasphere*reshape(EEG.data,[size(EEG.data,1)...
- size(EEG.data,2)*size(EEG.data,3)]),[size(EEG.data,1) size(EEG.data,2) size(EEG.data,3)]);
-    else EEG.icaact = EEG.icaweights*EEG.icasphere*EEG.data;
-    end
-end
+EEG.icaact = eeg_getica(EEG);
 
 topografie=EEG.icawinv'; %computes IC topographies
 
