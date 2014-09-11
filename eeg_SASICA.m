@@ -1182,34 +1182,36 @@ end
 %%%%%%%%%%%%%%%%%%%%%%% BELOW IS ADJUST CODE%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% ADJUST() - Automatic EEG artifact Detector
+
+% ADJUST() - Automatic EEG artifact Detector 
 % with Joint Use of Spatial and Temporal features
 %
 % Usage:
 %   >> [art, horiz, vert, blink, disc,...
-%         soglia_DV, diff_var, soglia_K, meanK, soglia_SED, SED, soglia_SAD, SAD, ...
-%         soglia_GDSF, GDSF, soglia_V, nuovaV]=ADJUST(EEG,out);
-%
+%         soglia_DV, diff_var, soglia_K, med2_K, meanK, soglia_SED, med2_SED, SED, soglia_SAD, med2_SAD, SAD, ...
+%         soglia_GDSF, med2_GDSF, GDSF, soglia_V, med2_V, nuovaV, soglia_D, maxdin]=ADJUST (EEG,out)
+% 
 % Inputs:
 %   EEG        - current dataset structure or structure array (has to be epoched)
+%   out        - (string) report file name 
 %
 % Outputs:
 %   art        - List of artifacted ICs
-%   horiz      - List of HEM ICs
-%   vert       - List of VEM ICs
-%   blink      - List of EB ICs
-%   disc       - List of GD ICs
-%   soglia_DV  - SVD threshold
+%   horiz      - List of HEM ICs 
+%   vert       - List of VEM ICs   
+%   blink      - List of EB ICs     
+%   disc       - List of GD ICs     
+%   soglia_DV  - SVD threshold      
 %   diff_var   - SVD feature values
-%   soglia_K   - TK threshold
+%   soglia_K   - TK threshold      
 %   meanK      - TK feature values
-%   soglia_SED - SED threshold
+%   soglia_SED - SED threshold      
 %   SED        - SED feature values
-%   soglia_SAD - SAD threshold
+%   soglia_SAD - SAD threshold      
 %   SAD        - SAD feature values
-%   soglia_GDSF- GDSF threshold
+%   soglia_GDSF- GDSF threshold      
 %   GDSF       - GDSF feature values
-%   soglia_V   - MEV threshold
+%   soglia_V   - MEV threshold      
 %   nuovaV     - MEV feature values
 %
 %
@@ -1217,23 +1219,27 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % ADJUST
-% Automatic EEG artifact Detector with Joint Use of Spatial and Temporal
-% features
-% Developed May2007 - October2008
-% Andrea Mognon and Marco Buiatti
-% CIMeC - Center for Mind/Brain Science, University of Trento
-% Last update: 26/11/2009 by Andrea Mognon
+% Automatic EEG artifact Detector based on the Joint Use of Spatial and Temporal features
+% 
+% Developed 2007-2014
+% Andrea Mognon (1) and Marco Buiatti (2), 
+% (1) Center for Mind/Brain Sciences, University of Trento, Italy
+% (2) INSERM U992 - Cognitive Neuroimaging Unit, Gif sur Yvette, France
+% 
+% Last update: 02/05/2014 by Marco Buiatti
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
+% 
 % Reference paper:
-% Mognon, Jovicich, Bruzzone, Buiatti, ADJUST: An Automatic EEG artifact Detector based on the
-% Joint Use of Spatial and Temporal features. Reviewed
+% Mognon A, Bruzzone L, Jovicich J, Buiatti M, 
+% ADJUST: An Automatic EEG artifact Detector based on the Joint Use of Spatial and Temporal features. 
+% Psychophysiology 48 (2), 229-240 (2011).
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Copyright (C) 2009 Andrea Mognon and Marco Buiatti,
-% Center for Mind/Brain Sciences, University of Trento, Italy
+% Copyright (C) 2009-2014 Andrea Mognon (1) and Marco Buiatti (2), 
+% (1) Center for Mind/Brain Sciences, University of Trento, Italy
+% (2) INSERM U992 - Cognitive Neuroimaging Unit, Gif sur Yvette, France
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -1253,6 +1259,13 @@ end
 
 % VERSIONS LOG
 %
+% 02/05/14: Modified text in Report.txt (MB).
+%
+% 30/03/14: Removed 'message to the user' (redundant). (MB)
+% 
+% 22/03/14: kurtosis is replaced by kurt for compatibility if signal processing
+%           toolbox is missing (MB).
+%
 % V2 (07 OCTOBER 2010) - by Andrea Mognon
 % Added input 'nchannels' to compute_SAD and compute_SED_NOnorm;
 % this is useful to differentiate the number of ICs (n) and the number of
@@ -1262,15 +1275,14 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-
-
+% function [art, horiz, vert, blink, disc,...
+%         soglia_DV, diff_var, soglia_K, meanK, soglia_SED, SED, soglia_SAD, SAD, ...
+%         soglia_GDSF, GDSF, soglia_V, nuovaV, soglia_D, maxdin]=ADJUST (EEG,out)
 function [art, horiz, vert, blink, disc,...
-        soglia_DV, diff_var, soglia_K, meanK, soglia_SED, SED, soglia_SAD, SAD, ...
-        soglia_GDSF, GDSF, soglia_V, nuovaV, soglia_D, maxdin]=ADJUST (EEG)
+        soglia_DV, diff_var, soglia_K, med2_K, meanK, soglia_SED, med2_SED, SED, soglia_SAD, med2_SAD, SAD, ...
+        soglia_GDSF, med2_GDSF, GDSF, soglia_V, med2_V, nuovaV, soglia_D, maxdin]=ADJUST (EEG)
 
-
-
-
+    
 %% Settings
 
 % ----------------------------------------------------
@@ -1280,15 +1292,12 @@ function [art, horiz, vert, blink, disc,...
 % ----------------------------------------------------
 % |  Initial message to user:                        |
 % ----------------------------------------------------
-
-disp(' ')
-disp(' ')
-disp ('ADJUST')
-disp(' ')
-disp('Detects Horizontal and Vertical eye movements,')
-disp('Blinks and Discontinuities in dataset:')
-disp([EEG.filename])
-disp(' ')
+% 
+% disp(' ')
+% disp('Detects Horizontal and Vertical eye movements,')
+% disp('Blinks and Discontinuities in dataset:')
+% disp([EEG.filename])
+% disp(' ')
 
 % ----------------------------------------------------
 % |  Collect useful data from EEG structure          |
@@ -1299,11 +1308,11 @@ disp(' ')
 %number of time points=size(EEG.data,2);
 
 if length(size(EEG.data))==3
-
+    
     num_epoch=size(EEG.data,3);
-
+       
 else
-
+    
     num_epoch=0;
 
 end
@@ -1311,53 +1320,40 @@ end
 % Check the presence of ICA activations
 
 if isempty(EEG.icaact)
-%     disp('EEG.icaact not present. Recomputed from data.');
-    EEG.icaact = eeg_getica(EEG);
-%     if length(size(EEG.data))==3
-%         %         EEG.icaact = EEG.icaweights*EEG.icasphere*reshape(EEG.data, size(EEG.icawinv,1), num_epoch*size(EEG.data,2));
-%         %         EEG.icaact = reshape(EEG.icaact,size(EEG.icawinv,1),size(EEG.data,2), num_epoch);
-%         %         EEG.icaact = reshape(EEG.icaweights*EEG.icasphere*reshape(EEG.data,[size(EEG.data,1)...
-%         %             size(EEG.data,2)*size(EEG.data,3)]),[size(EEG.data,1) size(EEG.data,2) size(EEG.data,3)]);
-%     else EEG.icaact = EEG.icaweights*EEG.icasphere*EEG.data;
-%     end
-end
-% check channels have position information
-chansok = [];
-for i = 1:numel(EEG.chanlocs)
-    if any(find(EEG.icachansind == i)) && not(isempty(EEG.chanlocs(i).X))
-        chansok(end+1) = i;
+    disp('EEG.icaact not present. Recomputed from data.');
+    if length(size(EEG.data))==3
+%         EEG.icaact = EEG.icaweights*EEG.icasphere*reshape(EEG.data, size(EEG.icawinv,1), num_epoch*size(EEG.data,2));
+%         EEG.icaact = reshape(EEG.icaact,size(EEG.icawinv,1),size(EEG.data,2), num_epoch);
+         EEG.icaact = reshape(EEG.icaweights*EEG.icasphere*reshape(EEG.data,[size(EEG.data,1)...
+ size(EEG.data,2)*size(EEG.data,3)]),[size(EEG.data,1) size(EEG.data,2) size(EEG.data,3)]);
+    else EEG.icaact = EEG.icaweights*EEG.icasphere*EEG.data;
     end
 end
-disp('Removing channels with no location information...');
-EEG = pop_select(EEG,'channel',chansok);
-EEG.icaact = eeg_getica(EEG);
-
 
 topografie=EEG.icawinv'; %computes IC topographies
 
 % Topographies and time courses normalization
-
-disp('Normalizing topographies...')
-disp('Scaling time courses...')
+% 
+% disp(' ');
+% disp('Normalizing topographies...')
+% disp('Scaling time courses...')
 
 for i=1:size(EEG.icawinv,2) % number of ICs
-
+    
     ScalingFactor=norm(topografie(i,:));
-
+    
     topografie(i,:)=topografie(i,:)/ScalingFactor;
-
+ 
     if length(size(EEG.data))==3
         EEG.icaact(i,:,:)=ScalingFactor*EEG.icaact(i,:,:);
     else
         EEG.icaact(i,:)=ScalingFactor*EEG.icaact(i,:);
     end
-
+    
 end
-
-disp('Done.')
-disp(' ')
-
-
+% 
+% disp('Done.')
+% disp(' ')
 
 % Variables memorizing artifacted ICs indexes
 
@@ -1369,61 +1365,71 @@ vert=[];
 
 disc=[];
 
+%% Check EEG channel position information
+nopos_channels=[];
+for el=1:length(EEG.chanlocs)
+    if(any(isempty(EEG.chanlocs(1,el).X)&isempty(EEG.chanlocs(1,el).Y)&isempty(EEG.chanlocs(1,el).Z)&isempty(EEG.chanlocs(1,el).theta)&isempty(EEG.chanlocs(1,el).radius)))
+        nopos_channels=[nopos_channels el];
+    end;
+end
+
+if ~isempty(nopos_channels)
+    disp(['Warning : Channels ' num2str(nopos_channels) ' have incomplete location information. They will NOT be used to compute ADJUST spatial features']);
+    disp(' ');
+end;
+
+pos_channels=setdiff(1:length(EEG.chanlocs),nopos_channels);
 
 %% Feature extraction
 
-disp('Extracting features:')
 disp(' ')
+disp('Features Extraction:')
 
 %GDSF - General Discontinuity Spatial Feature
 
 disp('GDSF - General Discontinuity Spatial Feature...')
-GDSF = compute_GD_feat(topografie,EEG.chanlocs(chansok),size(EEG.icawinv,2));
+
+GDSF = compute_GD_feat(topografie,EEG.chanlocs(1,pos_channels),size(EEG.icawinv,2));
 
 
 %SED - Spatial Eye Difference
 
 disp('SED - Spatial Eye Difference...')
 
-[SED,medie_left,medie_right]=computeSED_NOnorm(topografie,EEG.chanlocs(chansok),size(EEG.icawinv,2),size(EEG.icawinv,1));
+[SED,medie_left,medie_right]=computeSED_NOnorm(topografie,EEG.chanlocs(1,pos_channels),size(EEG.icawinv,2)); 
 
 
 %SAD - Spatial Average Difference
 
 disp('SAD - Spatial Average Difference...')
 
-[SAD,var_front,var_back,mean_front,mean_back]=computeSAD(topografie,EEG.chanlocs(chansok),size(EEG.icawinv,2),size(EEG.icawinv,1));
+[SAD,var_front,var_back,mean_front,mean_back]=computeSAD(topografie,EEG.chanlocs(1,pos_channels),size(EEG.icawinv,2));
 
 
 %SVD - Spatial Variance Difference between front zone and back zone
 
 diff_var=var_front-var_back;
 
-disp(' ')
-disp('Done.')
-disp(' ')
-
-
 %epoch dynamic range, variance and kurtosis
 
 K=zeros(num_epoch,size(EEG.icawinv,2)); %kurtosis
+Kloc=K;
 
 Vmax=zeros(num_epoch,size(EEG.icawinv,2)); %variance
 
-disp('Computing variance and kurtosis of all epochs...')
+% disp('Computing variance and kurtosis of all epochs...')
 
 for i=1:size(EEG.icawinv,2) % number of ICs
-
-    for j=1:num_epoch
-
-        Vmax(j,i)=var(EEG.icaact(i,:,j));
-
-        K(j,i)=kurt(EEG.icaact(i,:,j));% note I changed this from stats toolbox kurtosis.m to to eeglab kurt.m
-
-    end
-
+    
+    for j=1:num_epoch              
+        Vmax(j,i)=var(EEG.icaact(i,:,j));        
+%         Kloc(j,i)=kurtosis(EEG.icaact(i,:,j));
+        K(j,i)=kurt(EEG.icaact(i,:,j));
+    end  
 end
 
+% check that kurt and kurtosis give the same values:
+% [a,b]=max(abs(Kloc(:)-K(:)))
 
 %TK - Temporal Kurtosis
 
@@ -1433,7 +1439,7 @@ meanK=zeros(1,size(EEG.icawinv,2));
 
 for i=1:size(EEG.icawinv,2)
     if num_epoch>100
-    meanK(1,i)=trim_and_mean(K(:,i));
+    meanK(1,i)=trim_and_mean(K(:,i)); 
     else meanK(1,i)=mean(K(:,i));
     end
 
@@ -1452,7 +1458,7 @@ for i=1:size(EEG.icawinv,2)
     if num_epoch>100
      maxvar(1,i)=trim_and_max(Vmax(:,i)');
      meanvar(1,i)=trim_and_mean(Vmax(:,i)');
-    else
+    else 
      maxvar(1,i)=max(Vmax(:,i));
      meanvar(1,i)=mean(Vmax(:,i));
     end
@@ -1468,96 +1474,37 @@ nuovaV=maxvar./meanvar;
 
 disp('Computing EM thresholds...')
 
-soglia_K=EM(meanK);
+% soglia_K=EM(meanK);
+% 
+% soglia_SED=EM(SED);
+% 
+% soglia_SAD=EM(SAD);
+% 
+% soglia_GDSF=EM(GDSF);
+% 
+% soglia_V=EM(nuovaV); 
+[soglia_K,med1_K,med2_K]=EM(meanK);
 
-soglia_SED=EM(SED);
+[soglia_SED,med1_SED,med2_SED]=EM(SED);
 
-soglia_SAD=EM(SAD);
+[soglia_SAD,med1_SAD,med2_SAD]=EM(SAD);
 
-soglia_GDSF=EM(GDSF);
+[soglia_GDSF,med1_GDSF,med2_GDSF]=EM(GDSF);
 
-soglia_V=EM(nuovaV);
+[soglia_V,med1_V,med2_V]=EM(nuovaV); 
 
-disp('Done.')
-disp(' ')
-
-
-%% Output file header
-
-% ----------------------------------------------------
-% |  Opens report file and writes header             |
-% ----------------------------------------------------
-
-
-fprintf('ADJUST\n');
-
-fprintf('Automatic EEG artifacts Detector with Joint Use of Spatial and Temporal features\n\n');
-
-fprintf(['Analyzed dataset: ' EEG.filename '\n']);
-
-fprintf('Analysis carried out on the %d Independent Components\n\n',size(EEG.icawinv,2));
 
 
 %% Horizontal eye movements (HEM)
-
-disp('Evaluating Horizontal movements...')
-
-% ----------------------------------------------------
-% |  Writes HEM header in the report file            |
-% ----------------------------------------------------
-
-fprintf('> HEM - Horizontal movements\n\n');
-
-fprintf('Classification based on features:\n\n');
-
-fprintf('SED - Spatial eye difference (threshold=%f)\n',soglia_SED);
-
-fprintf('MEV - Maximum epoch variance (threshold=%f)\n\n',soglia_V);
-
-fprintf('ICs with Horizontal eye movements:\n');
-
-
 
 
 horiz=intersect(intersect(find(SED>=soglia_SED),find(medie_left.*medie_right<0)),...
     (find(nuovaV>=soglia_V)));
 
-hor_bool=1; %true if there are artifacted ICs
-
-if isempty(horiz) %no IC found
-
-    fprintf('/ \n');
-
-    hor_bool=0;
-
-else
-
-    fprintf([num2str(horiz) '\n']);
-    fprintf('\n');
-
-end
 
 
 
 %% Vertical eye movements (VEM)
-
-disp('Evaluating Vertical movements...')
-
-% ----------------------------------------------------
-% |  Writes VEM header in the report file            |
-% ----------------------------------------------------
-
-
-fprintf('>> VEM - Vertical movements\n\n');
-
-fprintf('Classification based on features:\n\n');
-
-fprintf('SAD - Spatial average difference (threshold=%f)\n',soglia_SAD);
-
-fprintf('MEV - Maximum epoch variance (threshold=%f)\n',soglia_V);
-
-fprintf('ICs with Vertical eye movements:\n');
-
 
 
 
@@ -1566,40 +1513,7 @@ vert=intersect(intersect(find(SAD>=soglia_SAD),find(medie_left.*medie_right>0)),
 
 
 
-ver_bool=1; %true if there are artifacted ICs
-
-if isempty(vert) %no artifact found
-
-    fprintf('/ \n');
-
-    ver_bool=0;
-else
-
-    fprintf([num2str(vert) '\n']);
-    fprintf('\n');
-end
-
-
-
-
 %% Eye Blink (EB)
-
-disp('Evaluating Blinks...')
-
-% ----------------------------------------------------
-% |  Writes EB header in the report file             |
-% ----------------------------------------------------
-
-fprintf('>>> EB - Blinks\n\n');
-
-fprintf('Classification based on features:\n\n');
-
-fprintf('SAD (threshold=%f)\n',soglia_SAD);
-
-fprintf('TK - Temporal kurtosis (threshold=%f)\n',soglia_K);
-
-fprintf('ICs with Blinks:\n');
-
 
 
 blink=intersect ( intersect( find(SAD>=soglia_SAD),find(medie_left.*medie_right>0) ) ,...
@@ -1607,60 +1521,11 @@ blink=intersect ( intersect( find(SAD>=soglia_SAD),find(medie_left.*medie_right>
 
 
 
-bl_bool=1; %true if there are artifacted ICs
-
-if isempty(blink) %no blink component
-
-    fprintf('/ \n');
-
-    bl_bool=0;
-else
-
-    fprintf([num2str(blink) '\n']);
-    fprintf('\n');
-end
-
-
-
 %% Generic Discontinuities (GD)
 
-disp('Evaluating Discontinuities...')
-
-% ----------------------------------------------------
-% |  Writes GD header in the report file             |
-% ----------------------------------------------------
-
-fprintf('>>>> GD - Discontinuities\n');
-
-fprintf('Classification based on features:\n\n');
-
-fprintf('GDSF - Generic Discontinuities Spatial Feature (threshold=%f)\n',soglia_GDSF);
-
-fprintf('MEV - Maximum epoch variance (threshold=%f)\n\n',soglia_V);
-
-fprintf('ICs with Discontinuities:\n');
 
 
 disc=intersect(find(GDSF>=soglia_GDSF),find(nuovaV>=soglia_V));
-
-dsc_bool=1; %true if there are discontinuities
-
-if isempty(disc) %no discontinuities
-
-    fprintf('/ \n');
-
-    dsc_bool=0;
-else
-
-    fprintf([num2str(disc) '\n']);
-    fprintf('\n');
-end
-
-
-
-
-
-
 
 
 %compute output variable
@@ -1673,40 +1538,317 @@ maxdin=zeros(1,size(EEG.icawinv,2));
 
 return
 
-%% The following sections have been moved to interface_ADJ in order to manage
-%% continuous data
+% compute_GD_feat() - Computes Generic Discontinuity spatial feature 
+%
+% Usage:
+%   >> res = compute_GD_feat(topografie,canali,num_componenti);
+%
+% Inputs:
+%   topografie - topographies vector
+%   canali     - EEG.chanlocs struct
+%   num_componenti  - number of components
+%
+% Outputs:
+%   res       - GDSF values
+
+% Copyright (C) 2009-2014 Andrea Mognon (1) and Marco Buiatti (2), 
+% (1) Center for Mind/Brain Sciences, University of Trento, Italy
+% (2) INSERM U992 - Cognitive Neuroimaging Unit, Gif sur Yvette, France
+%
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
+%
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+%
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-%% Saving artifacted ICs for further analysis
+function res = compute_GD_feat(topografie,canali,num_componenti)
 
-nome=['List_' EEG.setname '.mat'];
+% Computes GDSF, discontinuity spatial feature
+% topografie is the topography weights matrix
+% canali is the structure EEG.chanlocs
+% num_componenti is the number of ICs
+% res is GDSF values
 
-save (nome, 'blink', 'horiz', 'vert', 'disc');
+xpos=[canali.X];ypos=[canali.Y];zpos=[canali.Z];
+pos=[xpos',ypos',zpos'];
 
-disp(' ')
-disp(['Artifact ICs list saved in ' nome]);
+res=zeros(1,num_componenti);   
+
+for ic=1:num_componenti
+    
+    % consider the vector topografie(ic,:)
+    
+    aux=[];
+    
+    for el=1:length(canali)-1
+        
+        P=pos(el,:); %position of current electrode
+        d=pos-repmat(P,length(canali),1);
+        %d=pos-repmat(P,62,1);
+        dist=sqrt(sum((d.*d),2));
+        
+        [y,I]=sort(dist);
+        repchas=I(2:11); % list of 10 nearest channels to el
+        weightchas=exp(-y(2:11)); % respective weights, computed wrt distance
+        
+        aux=[aux abs(topografie(ic,el)-mean(weightchas.*topografie(ic,repchas)'))];
+                % difference between el and the average of 10 neighbors
+                % weighted according to weightchas
+    end
+    
+    res(ic)=max(aux);
+    
+end
 
 
-%% IC show & remove
-% show all ICs; detected ICs are highlighted in red color. Based on
-% pop_selectcomps.
+% computeSAD() - Computes Spatial Average Difference feature 
+%
+% Usage:
+%   >> [rapp,var_front,var_back,mean_front,mean_back]=computeSAD(topog,chanlocs,n);
+%
+% Inputs:
+%   topog      - topographies vector
+%   chanlocs   - EEG.chanlocs struct
+%   n          - number of ICs
+%   nchannels  - number of channels
+%
+% Outputs:
+%   rapp       - SAD values
+%   var_front  - Frontal Area variance values
+%   var_back   - Posterior Area variance values
+%   mean_front - Frontal Area average values
+%   mean_back  - Posterior Area average values
+%
+%
+% Copyright (C) 2009-2014 Andrea Mognon (1) and Marco Buiatti (2), 
+% (1) Center for Mind/Brain Sciences, University of Trento, Italy
+% (2) INSERM U992 - Cognitive Neuroimaging Unit, Gif sur Yvette, France
+%
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
+%
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+%
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-art = nonzeros( union (union(blink,horiz) , union(vert,disc)) )'; %artifact ICs
 
-    [EEG] = pop_selectcomps_ADJ( EEG, 1:size(EEG.icawinv,1), art, horiz, vert, blink, disc,...
-        soglia_DV, diff_var, soglia_K, meanK, soglia_SED, SED, soglia_SAD, SAD, ...
-        soglia_TDR, topog_DR, soglia_V, maxvar, soglia_D, maxdin );
+function [rapp,var_front,var_back,mean_front,mean_back]=computeSAD(topog,chanlocs,n)
 
+nchannels=length(chanlocs);
+
+%% Define scalp zones
+
+% Find electrodes in Frontal Area (FA)
+dimfront=0; %number of FA electrodes
+index1=zeros(1,nchannels); %indexes of FA electrodes
+
+for k=1:nchannels
+    if (abs(chanlocs(1,k).theta)<60) && (chanlocs(1,k).radius>0.40) %electrodes are in FA
+        dimfront=dimfront+1; %count electrodes
+        index1(1,dimfront)=k; 
+    end
+end
+
+ % Find electrodes in Posterior Area (PA)
+    dimback=0;
+    index3=zeros(1,nchannels);
+    for h=1:nchannels 
+        if (abs(chanlocs(1,h).theta)>110) 
+            dimback=dimback+1; 
+            index3(1,dimback)=h; 
+        end
+    end
+ 
+    if dimfront*dimback==0
+        disp('ERROR: no channels included in some scalp areas.')
+        disp('Check channels distribution and/or change scalp areas definitions in computeSAD.m and computeSED_NOnorm.m')
+        disp('ADJUST session aborted.')
+        return
+    end
+    
+%% Outputs
+
+     rapp=zeros(1,n); % SAD
+      mean_front=zeros(1,n); % FA electrodes mean value
+      mean_back=zeros(1,n); % PA electrodes mean value
+      var_front=zeros(1,n); % FA electrodes variance value
+      var_back=zeros(1,n); % PA electrodes variance value
+
+%% Output computation
+
+for i=1:n % for each topography
+    
+ %create FA electrodes vector
+    front=zeros(1,dimfront);
+    for h=1:dimfront
+        front(1,h)=topog(i,index1(1,h));
+    end
+    
+  %create PA electrodes vector
+    back=zeros(1,dimback);
+    for h=1:dimback
+        back(1,h)=topog(i,index3(1,h));
+    end
+    
+     
+    
+   %compute features
+    
+    rapp(1,i)=abs(mean(front))-abs(mean(back)); % SAD
+    mean_front(1,i)=mean(front);
+    mean_back(1,i)=mean(back);
+    var_back(1,i)=var(back);
+    var_front(1,i)=var(front);
+    
+end
+
+
+% computeSED_NOnorm() - Computes Spatial Eye Difference feature
+% without normalization 
+%
+% Usage:
+%   >> [out,medie_left,medie_right]=computeSED_NOnorm(topog,chanlocs,n);
+%
+% Inputs:
+%   topog      - topographies vector
+%   chanlocs   - EEG.chanlocs struct
+%   n          - number of ICs
+%   nchannels  - number of channels
+%
+% Outputs:
+%   out        - SED values
+%   medie_left - Left Eye area average values
+%   medie_right- Right Eye area average values
+%
+%
+% Copyright (C) 2009-2014 Andrea Mognon (1) and Marco Buiatti (2), 
+% (1) Center for Mind/Brain Sciences, University of Trento, Italy
+% (2) INSERM U992 - Cognitive Neuroimaging Unit, Gif sur Yvette, France
+%
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
+%
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+%
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+function [out,medie_left,medie_right]=computeSED_NOnorm(topog,chanlocs,n)
+
+nchannels=length(chanlocs);
+
+%% Define scalp zones
+
+% Find electrodes in Left Eye area (LE)
+dimleft=0; %number of LE electrodes
+index1=zeros(1,nchannels); %indexes of LE electrodes
+
+for k=1:nchannels
+    if (-61<chanlocs(1,k).theta) && (chanlocs(1,k).theta<-35) && (chanlocs(1,k).radius>0.30) %electrodes are in LE
+        dimleft=dimleft+1; %count electrodes
+        index1(1,dimleft)=k; 
+    end
+end
+    
+ % Find electrodes in Right Eye area (RE)
+ dimright=0; %number of RE electrodes
+ index2=zeros(1,nchannels); %indexes of RE electrodes
+ for g=1:nchannels
+     if (34<chanlocs(1,g).theta) && (chanlocs(1,g).theta<61) && (chanlocs(1,g).radius>0.30) %electrodes are in RE
+         dimright=dimright+1; %count electrodes
+         index2(1,dimright)=g;
+     end
+ end
+ 
+ % Find electrodes in Posterior Area (PA)
+ dimback=0;
+ index3=zeros(1,nchannels);
+ for h=1:nchannels
+     if (abs(chanlocs(1,h).theta)>110)
+         dimback=dimback+1;
+         index3(1,dimback)=h;
+     end
+ end
+ 
+ if dimleft*dimright*dimback==0
+     disp('ERROR: no channels included in some scalp areas.')
+     disp('Check channels distribution and/or change scalp areas definitions in computeSAD.m and computeSED_NOnorm.m')
+     disp('ADJUST session aborted.')
+     return
+ end
+ 
+ %% Outputs
+ 
+ out=zeros(1,n); %memorizes SED
+ medie_left=zeros(1,n); %memorizes LE mean value
+ medie_right=zeros(1,n); %memorizes RE mean value
+ 
+%% Output computation
+
+for i=1:n  % for each topography
+ %create LE electrodes vector
+    left=zeros(1,dimleft);
+    for h=1:dimleft
+        left(1,h)=topog(i,index1(1,h));
+    end
+    
+   %create RE electrodes vector
+    right=zeros(1,dimright);
+    for h=1:dimright
+        right(1,h)=topog(i,index2(1,h));
+    end
+    
+   %create PA electrodes vector
+    back=zeros(1,dimback);
+    for h=1:dimback
+        back(1,h)=topog(i,index3(1,h));
+    end
+    
+      
+    
+    %compute features
+    out1=abs(mean(left)-mean(right));
+    out2=var(back);
+    out(1,i)=out1; % SED not notmalized
+    medie_left(1,i)=mean(left);
+    medie_right(1,i)=mean(right);
+    
+    
+end
+
+   
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 % EM - ADJUST package
-%
-% Performs automatic threshold on the digital numbers
+% 
+% Performs automatic threshold on the digital numbers 
 % of the input vector 'vec'; based on Expectation - Maximization algorithm
 
 % Reference paper:
-% Bruzzone, L., Prieto, D.F., 2000. Automatic analysis of the difference image
-% for unsupervised change detection.
+% Bruzzone, L., Prieto, D.F., 2000. Automatic analysis of the difference image 
+% for unsupervised change detection. 
 % IEEE Trans. Geosci. Remote Sensing 38, 1171:1182
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1723,8 +1865,9 @@ art = nonzeros( union (union(blink,horiz) , union(vert,disc)) )'; %artifact ICs
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Copyright (C) 2009 Andrea Mognon and Marco Buiatti,
-% Center for Mind/Brain Sciences, University of Trento, Italy
+% Copyright (C) 2009-2014 Andrea Mognon (1) and Marco Buiatti (2), 
+% (1) Center for Mind/Brain Sciences, University of Trento, Italy
+% (2) INSERM U992 - Cognitive Neuroimaging Unit, Gif sur Yvette, France
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -1747,7 +1890,7 @@ if size(vec,2)>1
 	len=size(vec,2); %number of elements
 else
 	vec=vec';
-	len=size(vec,2);
+	len=size(vec,2); 
 end
 
 c_FA=1; % False Alarm cost
@@ -1769,7 +1912,7 @@ train2=[];
 train=[]; % Expectation of 'unlabeled' samples
 
 for i=1:(len)
-    if (vec(i)<(mediana-alpha2))
+    if (vec(i)<(mediana-alpha2)) 
         train2=[train2 vec(i)];
     elseif (vec(i)>(mediana+alpha1))
         train1=[train1 vec(i)];
@@ -1815,15 +1958,15 @@ while((dif_med_1>stop)&&(dif_med_2>stop)&&(dif_var_1>stop)&&(dif_var_2>stop)&&(d
 	prior2_i=[];
 
     % FOLLOWING FORMULATION IS ACCORDING TO REFERENCE PAPER:
-
+    
     for i=1:len
 		prior1_i=[prior1_i prior1_old*Bayes(med1_old,var1_old,vec(i))/...
 		   (prior1_old*Bayes(med1_old,var1_old,vec(i))+prior2_old*Bayes(med2_old,var2_old,vec(i)))];
 		prior2_i=[prior2_i prior2_old*Bayes(med2_old,var2_old,vec(i))/...
 		   (prior1_old*Bayes(med1_old,var1_old,vec(i))+prior2_old*Bayes(med2_old,var2_old,vec(i)))];
     end
-
-
+	
+	
 	prior1=sum(prior1_i)/len;
 	prior2=sum(prior2_i)/len;
 	med1=sum(prior1_i.*vec)/(prior1*len);
@@ -1880,420 +2023,23 @@ else
     prob=((1/(sqrt(2*pi*var)))*exp((-1)*((point-med)^2)/(2*var)));
 end
 
-
-% computeSAD() - Computes Spatial Average Difference feature
-%
-% Usage:
-%   >> [rapp,var_front,var_back,mean_front,mean_back]=computeSAD(topog,chanlocs,n);
-%
-% Inputs:
-%   topog      - topographies vector
-%   chanlocs   - EEG.chanlocs struct
-%   n          - number of ICs
-%   nchannels  - number of channels
-%
-% Outputs:
-%   rapp       - SAD values
-%   var_front  - Frontal Area variance values
-%   var_back   - Posterior Area variance values
-%   mean_front - Frontal Area average values
-%   mean_back  - Posterior Area average values
-%
-%
-% Copyright (C) 2009 Andrea Mognon and Marco Buiatti,
-% Center for Mind/Brain Sciences, University of Trento, Italy
-%
-% This program is free software; you can redistribute it and/or modify
-% it under the terms of the GNU General Public License as published by
-% the Free Software Foundation; either version 2 of the License, or
-% (at your option) any later version.
-%
-% This program is distributed in the hope that it will be useful,
-% but WITHOUT ANY WARRANTY; without even the implied warranty of
-% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-% GNU General Public License for more details.
-%
-% You should have received a copy of the GNU General Public License
-% along with this program; if not, write to the Free Software
-% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-
-function [rapp,var_front,var_back,mean_front,mean_back]=computeSAD(topog,chanlocs,n,nchannels)
-
-
-%% Define scalp zones
-
-% Find electrodes in Frontal Area (FA)
-dimfront=0; %number of FA electrodes
-index1=zeros(1,nchannels); %indexes of FA electrodes
-
-for k=1:nchannels
-    if (abs(chanlocs(1,k).theta)<60) && (chanlocs(1,k).radius>0.40) %electrodes are in FA
-        dimfront=dimfront+1; %count electrodes
-        index1(1,dimfront)=k;
-    end
-end
-
- % Find electrodes in Posterior Area (PA)
-    dimback=0;
-    index3=zeros(1,nchannels);
-    for h=1:nchannels
-        if (abs(chanlocs(1,h).theta)>110)
-            dimback=dimback+1;
-            index3(1,dimback)=h;
-        end
-    end
-
-    if dimfront*dimback==0
-        disp('ERROR: no channels included in some scalp areas.')
-        disp('Check channels distribution and/or change scalp areas definitions in computeSAD.m and computeSED_NOnorm.m')
-        disp('ADJUST session aborted.')
-        return
-    end
-
-%% Outputs
-
-     rapp=zeros(1,n); % SAD
-      mean_front=zeros(1,n); % FA electrodes mean value
-      mean_back=zeros(1,n); % PA electrodes mean value
-      var_front=zeros(1,n); % FA electrodes variance value
-      var_back=zeros(1,n); % PA electrodes variance value
-
-%% Output computation
-
-for i=1:n % for each topography
-
- %create FA electrodes vector
-    front=zeros(1,dimfront);
-    for h=1:dimfront
-        front(1,h)=topog(i,index1(1,h));
-    end
-
-  %create PA electrodes vector
-    back=zeros(1,dimback);
-    for h=1:dimback
-        back(1,h)=topog(i,index3(1,h));
-    end
-
-
-
-   %compute features
-
-    rapp(1,i)=abs(mean(front))-abs(mean(back)); % SAD
-    mean_front(1,i)=mean(front);
-    mean_back(1,i)=mean(back);
-    var_back(1,i)=var(back);
-    var_front(1,i)=var(front);
-
-end
-
-
-% computeSED_NOnorm() - Computes Spatial Eye Difference feature
-% without normalization
-%
-% Usage:
-%   >> [out,medie_left,medie_right]=computeSED_NOnorm(topog,chanlocs,n);
-%
-% Inputs:
-%   topog      - topographies vector
-%   chanlocs   - EEG.chanlocs struct
-%   n          - number of ICs
-%   nchannels  - number of channels
-%
-% Outputs:
-%   out        - SED values
-%   medie_left - Left Eye area average values
-%   medie_right- Right Eye area average values
-%
-%
-% Copyright (C) 2009 Andrea Mognon and Marco Buiatti,
-% Center for Mind/Brain Sciences, University of Trento, Italy
-%
-% This program is free software; you can redistribute it and/or modify
-% it under the terms of the GNU General Public License as published by
-% the Free Software Foundation; either version 2 of the License, or
-% (at your option) any later version.
-%
-% This program is distributed in the hope that it will be useful,
-% but WITHOUT ANY WARRANTY; without even the implied warranty of
-% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-% GNU General Public License for more details.
-%
-% You should have received a copy of the GNU General Public License
-% along with this program; if not, write to the Free Software
-% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-function [out,medie_left,medie_right]=computeSED_NOnorm(topog,chanlocs,n,nchannels)
-
-
-
-%% Define scalp zones
-
-% Find electrodes in Left Eye area (LE)
-dimleft=0; %number of LE electrodes
-index1=zeros(1,nchannels); %indexes of LE electrodes
-
-for k=1:nchannels
-    if (-61<chanlocs(1,k).theta) && (chanlocs(1,k).theta<-35) && (chanlocs(1,k).radius>0.30) %electrodes are in LE
-        dimleft=dimleft+1; %count electrodes
-        index1(1,dimleft)=k;
-    end
-end
-
- % Find electrodes in Right Eye area (RE)
-    dimright=0; %number of RE electrodes
-    index2=zeros(1,nchannels); %indexes of RE electrodes
-    for g=1:nchannels
-        if (34<chanlocs(1,g).theta) && (chanlocs(1,g).theta<61) && (chanlocs(1,g).radius>0.30) %electrodes are in RE
-            dimright=dimright+1; %count electrodes
-            index2(1,dimright)=g;
-        end
-    end
-
-   % Find electrodes in Posterior Area (PA)
-    dimback=0;
-    index3=zeros(1,nchannels);
-    for h=1:nchannels
-        if (abs(chanlocs(1,h).theta)>110)
-            dimback=dimback+1;
-            index3(1,dimback)=h;
-        end
-    end
-
-    if dimleft*dimright*dimback==0
-        disp('ERROR: no channels included in some scalp areas.')
-        disp('Check channels distribution and/or change scalp areas definitions in computeSAD.m and computeSED_NOnorm.m')
-        disp('ADJUST session aborted.')
-        return
-    end
-
-%% Outputs
-
-     out=zeros(1,n); %memorizes SED
-      medie_left=zeros(1,n); %memorizes LE mean value
-      medie_right=zeros(1,n); %memorizes RE mean value
-
-%% Output computation
-
-for i=1:n  % for each topography
- %create LE electrodes vector
-    left=zeros(1,dimleft);
-    for h=1:dimleft
-        left(1,h)=topog(i,index1(1,h));
-    end
-
-   %create RE electrodes vector
-    right=zeros(1,dimright);
-    for h=1:dimright
-        right(1,h)=topog(i,index2(1,h));
-    end
-
-   %create PA electrodes vector
-    back=zeros(1,dimback);
-    for h=1:dimback
-        back(1,h)=topog(i,index3(1,h));
-    end
-
-
-
-    %compute features
-    out1=abs(mean(left)-mean(right));
-    out2=var(back);
-    out(1,i)=out1; % SED not notmalized
-    medie_left(1,i)=mean(left);
-    medie_right(1,i)=mean(right);
-
-
-end
-
-
-% compute_GD_feat() - Computes Generic Discontinuity spatial feature
-%
-% Usage:
-%   >> res = compute_GD_feat(topografie,canali,num_componenti);
-%
-% Inputs:
-%   topografie - topographies vector
-%   canali     - EEG.chanlocs struct
-%   num_componenti  - number of components
-%
-% Outputs:
-%   res       - GDSF values
-
-% Copyright (C) 2009 Andrea Mognon and Marco Buiatti,
-% Center for Mind/Brain Sciences, University of Trento, Italy
-%
-% This program is free software; you can redistribute it and/or modify
-% it under the terms of the GNU General Public License as published by
-% the Free Software Foundation; either version 2 of the License, or
-% (at your option) any later version.
-%
-% This program is distributed in the hope that it will be useful,
-% but WITHOUT ANY WARRANTY; without even the implied warranty of
-% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-% GNU General Public License for more details.
-%
-% You should have received a copy of the GNU General Public License
-% along with this program; if not, write to the Free Software
-% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-
-function res = compute_GD_feat(topografie,canali,num_componenti)
-
-% Computes GDSF, discontinuity spatial feature
-% topografie is the topography weights matrix
-% canali is the structure EEG.chanlocs
-% num_componenti is the number of ICs
-% res is GDSF values
-
-xpos=[canali.X];ypos=[canali.Y];zpos=[canali.Z];
-pos=[xpos',ypos',zpos'];
-
-res=zeros(1,num_componenti);
-
-for ic=1:num_componenti
-
-    % consider the vector topografie(ic,:)
-
-    aux=[];
-
-    for el=1:length(canali)-1
-
-        P=pos(el,:); %position of current electrode
-        d=pos-repmat(P,length(canali),1);
-        %d=pos-repmat(P,62,1);
-        dist=sqrt(sum((d.*d),2));
-
-        [y,I]=sort(dist);
-        repchas=I(2:11); % list of 10 nearest channels to el
-        weightchas=exp(-y(2:11)); % respective weights, computed wrt distance
-
-        aux=[aux abs(topografie(ic,el)-mean(weightchas.*topografie(ic,repchas)'))];
-                % difference between el and the average of 10 neighbors
-                % weighted according to weightchas
-    end
-
-    res(ic)=max(aux);
-
-end
-
-
-% trim_and_max() - Computes maximum value from vector 'vettore'
-% after removing the top 1% of the values
-% (to be outlier resistant)
-%
-% Usage:
-%   >> valore=trim_and_max(vettore);
-%
-% Inputs:
-%   vettore    - row vector
-%
-% Outputs:
-%   valore     - result
-%
-%
-% Author: Andrea Mognon, Center for Mind/Brain Sciences, University of
-% Trento, 2009
-
-% Motivation taken from the following comment to our paper:
-% "On page 11 the authors motivate the use of the max5 function when computing
-% Maximum Epoch Variance because the simple maximum would be too sensitive
-% to spurious outliers. This is a good concern, however the max5 function would
-% still be sensitive to spurious outliers for very large data sets. In other words, if
-% the data set is large enough, one will be very likely to record more than five
-% outliers. The authors should use a trimmed max function that computes the
-% simple maximum after the top say .1% of the values have been removed from
-% consideration. This rejection criteria scales appropriately with the size of the data
-% set."
-
-% Copyright (C) 2009 Andrea Mognon and Marco Buiatti,
-% Center for Mind/Brain Sciences, University of Trento, Italy
-%
-% This program is free software; you can redistribute it and/or modify
-% it under the terms of the GNU General Public License as published by
-% the Free Software Foundation; either version 2 of the License, or
-% (at your option) any later version.
-%
-% This program is distributed in the hope that it will be useful,
-% but WITHOUT ANY WARRANTY; without even the implied warranty of
-% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-% GNU General Public License for more details.
-%
-% You should have received a copy of the GNU General Public License
-% along with this program; if not, write to the Free Software
-% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-
-function valore=trim_and_max(vettore)
-
-
-dim=floor(.01*size(vettore,2)); % = 1% of vector length
-
-tmp=sort(vettore);
-valore= tmp(length(vettore)-dim);
-
-
-
-% trim_and_mean() - Computes average value from vector 'vettore'
-% after removing the top .1% of the values
-% (to be outlier resistant)
-%
-% Usage:
-%   >> valore=trim_and_mean(vettore);
-%
-% Inputs:
-%   vettore    - row vector
-%
-% Outputs:
-%   valore     - result
-%
-% Copyright (C) 2009 Andrea Mognon and Marco Buiatti,
-% Center for Mind/Brain Sciences, University of Trento, Italy
-%
-% This program is free software; you can redistribute it and/or modify
-% it under the terms of the GNU General Public License as published by
-% the Free Software Foundation; either version 2 of the License, or
-% (at your option) any later version.
-%
-% This program is distributed in the hope that it will be useful,
-% but WITHOUT ANY WARRANTY; without even the implied warranty of
-% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-% GNU General Public License for more details.
-%
-% You should have received a copy of the GNU General Public License
-% along with this program; if not, write to the Free Software
-% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-
-function valore=trim_and_mean(vettore)
-
-
-dim=floor(.01*size(vettore,2)); % = 1% of vector length
-
-tmp=sort(vettore);
-valore= mean (tmp(1:(length(vettore)-dim)));
-
-function com = pop_prop_ADJ(EEG, typecomp, numcompo, winhandle, is_H, is_V, is_B, is_D,...
-    soglia_DV, diff_var, soglia_K, meanK, soglia_SED, SED,...
-            soglia_SAD, SAD, soglia_GDSF, GDSF, soglia_V, maxvar, soglia_D, maxdin) %,spec_opt)
-
 % pop_prop_ADJ() - overloaded pop_prop() for ADJUST plugin.
-%              plot the properties of a channel or of an independent component.
+%              plot the properties of a channel or of an independent component. 
 %              ADJUST feature values are also shown (normalized wrt threshold).
-%
+%              
 %
 % Usage:
 %   >> com = pop_prop_ADJ(EEG, typecomp, numcompo, winhandle, is_H, is_V, is_B, is_D,...
-%           soglia_DV, diff_var, soglia_K, meanK, soglia_SED, SED,...
-%           soglia_SAD, SAD, soglia_TDR, topog_DR, soglia_V, maxvar, soglia_D, maxdin);
-%
+%     soglia_DV, diff_var, soglia_K, med2_K, meanK, soglia_SED, med2_SED, SED, soglia_SAD, med2_SAD, SAD, ...
+%         soglia_GDSF, med2_GDSF, GDSF, soglia_V, med2_V, maxvar, soglia_D, maxdin)
+% 
 % Inputs:
-%   EEG        - current dataset structure or structure array
-%   typecomp   - [0|1] compute electrode property (1) or component
+%   EEG        - current dataset structure or structure array 
+%   typecomp   - [0|1] compute electrode property (1) or component 
 %                property (0). Default is 1.
 %   numcompo   - channel or component number
 %   winhandle  - if this parameter is present or non-NaN, buttons for the
-%                rejection of the component are drawn. If
+%                rejection of the component are drawn. If 
 %                non-zero, this parameter is used to backpropagate
 %                the color of the rejection button.
 %   is_H       - (bool) true if plotted IC is HEM
@@ -2303,41 +2049,42 @@ function com = pop_prop_ADJ(EEG, typecomp, numcompo, winhandle, is_H, is_V, is_B
 %   soglia_DV  - feature1 (SVD) threshold
 %   diff_var   - feature1 (SVD) vector
 %   soglia_K   - feature2 (TK) threshold
-%   meanK      - feature2 (TK) vector
+%   meanK      - feature2 (TK) vector 
 %   soglia_SED - feature3 (SED) threshold
 %   SED        - feature3 (SED) vector
 %   soglia_SAD - feature4 (SAD) threshold
-%   SAD        - feature4 (SAD) vector
+%   SAD        - feature4 (SAD) vector 
 %   soglia_TDR - feature5 (SDR) threshold
 %   topog_DR   - feature5 (SDR) vector
 %   soglia_V   - feature6 (MEV) threshold
-%   maxvar     - feature6 (MEV) vector
+%   maxvar     - feature6 (MEV) vector 
 %   soglia_D   - feature7 (MEDR) threshold
-%   maxdin     - feature7 (MEDR) vector
+%   maxdin     - feature7 (MEDR) vector 
 %
 
 % ORIGINAL HELP:
 % pop_prop() - plot the properties of a channel or of an independent
-%              component.
+%              component. 
 % Usage:
-%   >> pop_prop( EEG, typecomp); % pops up a query window
+%   >> pop_prop( EEG, typecomp); % pops up a query window 
 %   >> pop_prop( EEG, typecomp, chan, winhandle);
 %
 % Inputs:
 %   EEG        - dataset structure (see EEGGLOBAL)
-%   typecomp   - [0|1] compute electrode property (1) or component
+%   typecomp   - [0|1] compute electrode property (1) or component 
 %                property (0). Default is 1.
 %   chan       - channel or component number
 %   winhandle  - if this parameter is present or non-NaN, buttons for the
-%                rejection of the component are drawn. If
+%                rejection of the component are drawn. If 
 %                non-zero, this parameter is used to backpropagate
 %                the color of the rejection button.
 %   spectral_options - [cell array] cell arry of options for the spectopo()
 %                      function.
-%
+% 
 
-% Copyright (C) 2009 Andrea Mognon and Marco Buiatti,
-% Center for Mind/Brain Sciences, University of Trento, Italy
+% Copyright (C) 2009-2014 Andrea Mognon (1) and Marco Buiatti (2), 
+% (1) Center for Mind/Brain Sciences, University of Trento, Italy
+% (2) INSERM U992 - Cognitive Neuroimaging Unit, Gif sur Yvette, France
 %
 % This program is free software; you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -2352,12 +2099,22 @@ function com = pop_prop_ADJ(EEG, typecomp, numcompo, winhandle, is_H, is_V, is_B
 % You should have received a copy of the GNU General Public License
 % along with this program; if not, write to the Free Software
 % Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+% 
+%
+%
+% VERSIONS LOG
+% 
+% 26/03/14:
+% 
 
+function com = pop_prop_ADJ(EEG, typecomp, numcompo, winhandle, is_H, is_V, is_B, is_D,...
+    soglia_DV, diff_var, soglia_K, med2_K, meanK, soglia_SED, med2_SED, SED, soglia_SAD, med2_SAD, SAD, ...
+        soglia_GDSF, med2_GDSF, GDSF, soglia_V, med2_V, maxvar, soglia_D, maxdin) %,spec_opt)
 
 com = '';
 if nargin < 1
 	help pop_prop_ADJ;
-	return;
+	return;   
 end;
 
 if nargin == 1
@@ -2365,14 +2122,14 @@ if nargin == 1
 end;
 if typecomp == 0 & isempty(EEG.icaweights)
    error('No ICA weights recorded for this set, first run ICA');
-end;
+end;   
 if nargin == 2
 	promptstr    = { fastif(typecomp,'Channel number to plot:','Component number to plot:') ...
                      'Spectral options (see spectopo help):' };
 	inistr       = { '1' '''freqrange'', [2 50]' };
 	result       = inputdlg2( promptstr, 'Component properties - pop_prop_ADJ()', 1,  inistr, 'pop_prop_ADJ');
 	if size( result, 1 ) == 0 return; end;
-
+   
 	numcompo   = eval( [ '[' result{1} ']' ] );
     spec_opt   = eval( [ '{' result{2} '}' ] );
 end;
@@ -2389,14 +2146,14 @@ end;
 
 if numcompo < 1 | numcompo > EEG.nbchan
    error('Component index out of range');
-end;
+end;   
 
 % assumed input is numcompo
 % -------------------------
-try, icadefs;
-catch,
+try, icadefs; 
+catch, 
 	BACKCOLOR = [0.8 0.8 0.8];
-	GUIBUTTONCOLOR   = [0.8 0.8 0.8];
+	GUIBUTTONCOLOR   = [0.8 0.8 0.8]; 
 end;
 basename = [fastif(typecomp,'Channel ', 'Component ') int2str(numcompo) ];
 
@@ -2411,9 +2168,9 @@ axis off;
 
 % plotting topoplot
 % -----------------
-h = axes('Units','Normalized', 'Position',[-10 65 40 35].*s+q);
+h = axes('Units','Normalized', 'Position',[-10 65 40 35].*s+q); 
 
-%topoplot( EEG.icawinv(:,numcompo), EEG.chanlocs); axis square;
+%topoplot( EEG.icawinv(:,numcompo), EEG.chanlocs); axis square; 
 
 if typecomp == 1 % plot single channel locations
 	topoplot( numcompo, EEG.chanlocs, 'chaninfo', EEG.chaninfo, ...
@@ -2423,13 +2180,13 @@ else             % plot component map
              'shading', 'interp', 'numcontour', 3); axis square;
 end;
 basename = [fastif(typecomp,'Channel ', 'IC') int2str(numcompo) ];
-% title([ basename fastif(typecomp, ' location', ' map')], 'fontsize', 14);
-title(basename, 'fontsize', 12);
+% title([ basename fastif(typecomp, ' location', ' map')], 'fontsize', 14); 
+title(basename, 'fontsize', 12); 
 
 % plotting erpimage
 % -----------------
 hhh = axes('Units','Normalized', 'Position',[45 67 48 33].*s+q); %era height 38
-eeglab_options;
+eeglab_options; 
 if EEG.trials > 1
     % put title at top of erpimage
     axis off
@@ -2443,21 +2200,21 @@ if EEG.trials > 1
     if typecomp == 1 % plot component
          offset = nan_mean(EEG.data(numcompo,:));
          erpimage( EEG.data(numcompo,:)-offset, ones(1,EEG.trials)*10000, EEG.times , ...
-                       '', ei_smooth, 1, 'caxis', 2/3, 'cbar','erp');
+                       '', ei_smooth, 1, 'caxis', 2/3, 'cbar','erp');   
     else % plot channel
-          if option_computeica
+          if option_computeica  
                   offset = nan_mean(EEG.icaact(numcompo,:));
                   erpimage( EEG.icaact(numcompo,:)-offset, ones(1,EEG.trials)*10000, EEG.times , ...
-                       '', ei_smooth, 1, 'caxis', 2/3, 'cbar','erp', 'yerplabel', '');
+                       '', ei_smooth, 1, 'caxis', 2/3, 'cbar','erp', 'yerplabel', '');   
           else
-
+                
               icaacttmp = (EEG.icaweights(numcompo,:) * EEG.icasphere) ...
                                    * reshape(EEG.data(1:size(EEG.icaweights,1),:,:), EEG.nbchan, EEG.trials*EEG.pnts);
 %                     icaacttmp = (EEG.icaweights(numcompo,:) * EEG.icasphere) ...
 %                                    * EEG.data(EEG.nbchan, EEG.trials*EEG.pnts);
                   offset = nan_mean(icaacttmp);
                   erpimage( icaacttmp-offset, ones(1,EEG.trials)*10000, EEG.times, ...
-                       '', ei_smooth, 1, 'caxis', 2/3, 'cbar','erp', 'yerplabel', '');
+                       '', ei_smooth, 1, 'caxis', 2/3, 'cbar','erp', 'yerplabel', '');   
           end;
     end;
     axes(hhh);
@@ -2470,7 +2227,7 @@ else
     hh = axes('Units','Normalized', 'Position',[45 62 48 38].*s+q);
     ERPIMAGELINES = 200; % show 200-line erpimage
     while size(EEG.data,2) < ERPIMAGELINES*EEG.srate
-       ERPIMAGELINES = round(0.9 * ERPIMAGESLINES);
+       ERPIMAGELINES = round(0.9 * ERPIMAGELINES);
     end
     if ERPIMAGELINES > 2   % give up if data too small
       if ERPIMAGELINES < 10
@@ -2484,24 +2241,24 @@ else
       if typecomp == 1 % plot component
            offset = nan_mean(EEG.data(numcompo,:));
            erpimage( reshape(EEG.data(numcompo,1:erpimageframestot),erpimageframes,ERPIMAGELINES)-offset, ones(1,ERPIMAGELINES)*10000, eegtimes , ...
-                         EI_TITLE, ei_smooth, 1, 'caxis', 2/3, 'cbar');
+                         EI_TITLE, ei_smooth, 1, 'caxis', 2/3, 'cbar');   
       else % plot channel
-            if option_computeica
+            if option_computeica  
                     offset = nan_mean(EEG.icaact(numcompo,:));
                     erpimage( ...
               reshape(EEG.icaact(numcompo,1:erpimageframestot),erpimageframes,ERPIMAGELINES)-offset, ...
                    ones(1,ERPIMAGELINES)*10000, eegtimes , ...
-                         EI_TITLE, ei_smooth, 1, 'caxis', 2/3, 'cbar','yerplabel', '');
+                         EI_TITLE, ei_smooth, 1, 'caxis', 2/3, 'cbar','yerplabel', '');   
             else
 %                     icaacttmp = reshape(EEG.icaweights(numcompo,:) * EEG.icasphere) ...
 %                                      * reshape(EEG.data, erpimageframes, ERPIMAGELINES);
-
+                        
                         icaacttmp = EEG.icaweights(numcompo,:) * EEG.icasphere ...
                                      *EEG.data(:,1:erpimageframes*ERPIMAGELINES);
 
                     offset = nan_mean(icaacttmp);
                     erpimage( icaacttmp-offset, ones(1,ERPIMAGELINES)*10000, eegtimes, ...
-                         EI_TITLE, ei_smooth, 1, 'caxis', 2/3, 'cbar', 'yerplabel', '');
+                         EI_TITLE, ei_smooth, 1, 'caxis', 2/3, 'cbar', 'yerplabel', '');   
             end;
       end
     else
@@ -2509,7 +2266,7 @@ else
             text(0.1, 0.3, [ 'No erpimage plotted' 10 'for small continuous data']);
     end;
     axes(hhh);
-end;
+end;	
 
 % plotting spectrum
 % -----------------
@@ -2533,21 +2290,21 @@ try
 	if typecomp == 1
 		%[spectra freqs] = spectopo( EEG.data(numcompo,:), EEG.pnts, EEG.srate, spec_opt{:},'freqrange', [0 45] );
         [spectra freqs] = spectopo( EEG.data(numcompo,:), EEG.pnts, EEG.srate, 'freqrange', [0 45] );
-	else
-		if option_computeica
-
+	else 
+		if option_computeica  
+            
 			%[spectra freqs] = spectopo( EEG.icaact(numcompo,:), EEG.pnts, EEG.srate, 'mapnorm', EEG.icawinv(:,numcompo), spec_opt{:}, 'freqrange', [0 45]);
             % CONTROL ADDED FOR CONTINUOUS DATA
-            if size(EEG.data,3)==1
+            if size(EEG.data,3)==1 
                 EEG.icaact = EEG.icaweights*EEG.icasphere*EEG.data;
             end
             [spectra freqs] = spectopo( EEG.icaact(numcompo,:), EEG.pnts, EEG.srate, 'mapnorm', EEG.icawinv(:,numcompo),  'freqrange', [0 45]);
 		else
-			if exist('icaacttmp')~=1,
-
-				icaacttmp = (EEG.icaweights(numcompo,:)*EEG.icasphere)*reshape(EEG.data, EEG.nbchan, EEG.trials*EEG.pnts);
+			if exist('icaacttmp')~=1, 
+                
+				icaacttmp = (EEG.icaweights(numcompo,:)*EEG.icasphere)*reshape(EEG.data, EEG.nbchan, EEG.trials*EEG.pnts); 
 			end;
-
+            
 			%[spectra freqs] = spectopo( icaacttmp, EEG.pnts, EEG.srate, 'mapnorm', EEG.icawinv(:,numcompo), spec_opt{:} ,'freqrange', [0 45]);
             [spectra freqs] = spectopo( icaacttmp, EEG.pnts, EEG.srate, 'mapnorm', EEG.icawinv(:,numcompo), 'freqrange', [0 45]);
 		end;
@@ -2559,16 +2316,16 @@ try
 	%set(gca, 'xlim', [0 min(freqslim, EEG.srate/2)]);
     %spectra = spectra(find(freqs <= freqslim));
 	%set(gca, 'ylim', [min(spectra) max(spectra)]);
-
+    
 	%tmpy = get(gca, 'ylim');
     %set(gca, 'ylim', [max(tmpy(1),-1) tmpy(2)]);
-	set( get(gca, 'ylabel'), 'string', 'Power 10*log_{10}(\muV^{2}/Hz)', 'fontsize', 8);
-	set( get(gca, 'xlabel'), 'string', 'Frequency (Hz)', 'fontsize', 8);
-	title('Activity power spectrum', 'fontsize', 12);
+	set( get(gca, 'ylabel'), 'string', 'Power 10*log_{10}(\muV^{2}/Hz)', 'fontsize', 8); 
+	set( get(gca, 'xlabel'), 'string', 'Frequency (Hz)', 'fontsize', 8); 
+	title('Activity power spectrum', 'fontsize', 12); 
 catch
 	axis off;
 	text(0.1, 0.3, [ 'Error: no spectrum plotted' 10 ' make sure you have the ' 10 'signal processing toolbox']);
-end;
+end;	
 
 % ----------------------------------------------------------------
 % plotting IC properties
@@ -2596,7 +2353,7 @@ end
             if is_D
                 str=[str 'GD'];
             end
-
+      
 if (is_H || is_V || is_B || is_D)==0
     str='ADJUST - Not detected';
 end
@@ -2606,7 +2363,9 @@ end
 %     '); SDR ' num2str(topog_DR) '(' num2str(soglia_TDR) ')'],'FontSize',8);
 
 % compute bar graph entries
-E=[ SAD/soglia_SAD SED/soglia_SED GDSF/soglia_GDSF maxvar/soglia_V meanK/soglia_K];
+% E=[ SAD/soglia_SAD SED/soglia_SED GDSF/soglia_GDSF maxvar/soglia_V meanK/soglia_K];
+E=[(SAD-med2_SAD)/(soglia_SAD-med2_SAD) (SED-med2_SED)/(soglia_SED-med2_SED) (GDSF-med2_GDSF)/(soglia_GDSF-med2_GDSF) (maxvar-med2_V)/(soglia_V-med2_V) (meanK-med2_K)/(soglia_K-med2_K)];
+
 % set bar colors
 C={[1 0 0],[.6 0 .2],[1 1 0],[0 1 0], [0 1 1]};
 % horizontal line
@@ -2652,8 +2411,8 @@ if ~isnan(winhandle)
 				'     set( gcbo, ''backgroundcolor'',' COLREJ ', ''string'', ''REJECT'');' ...
 				'else ' ...
 				'     set( gcbo, ''backgroundcolor'',' COLACC ', ''string'', ''ACCEPT'');' ...
-				'end;' ];
-	set( hr, 'callback', command);
+				'end;' ];					
+	set( hr, 'callback', command); 
 
 	% HELP button
 	% -------------
@@ -2663,12 +2422,12 @@ if ~isnan(winhandle)
 	% ---------
  	command = [ 'global EEG;' ...
  				'tmpstatus = get( findobj(''parent'', gcbf, ''tag'', ''rejstatus''), ''userdata'');' ...
- 				'EEG.reject.gcompreject(' num2str(numcompo) ') = tmpstatus;' ];
+ 				'EEG.reject.gcompreject(' num2str(numcompo) ') = tmpstatus;' ]; 
 	if winhandle ~= 0
 	 	command = [ command ...
 	 				sprintf('if tmpstatus set(%3.15f, ''backgroundcolor'', %s); else set(%3.15f, ''backgroundcolor'', %s); end;', ...
 					winhandle, COLREJ, winhandle, COLACC)];
-	end;
+	end;				
 	command = [ command 'close(gcf); clear tmpstatus' ];
 	h  = uicontrol(gcf, 'Style', 'pushbutton', 'string', 'OK', 'backgroundcolor', GUIBUTTONCOLOR, 'Units','Normalized', 'Position',[90 -10 15 6].*s+q, 'callback', command);
 
@@ -2699,453 +2458,29 @@ if ~isnan(winhandle)
 					    '(after manually accepting/rejecting the component, you may recalibrate thresholds for future automatic rejection on other datasets)'',' ...
 						'EEG.stats.compenta(' index '), EEG.reject.threshentropy, EEG.stats.compkurta(' index '), ' ...
 						'EEG.reject.threshkurtact, EEG.stats.compkurtdist(' index '), EEG.reject.threshkurtdist, fastif(EEG.reject.gcompreject(' index '), ''REJECT'', ''ACCEPT''));' ...
-		'' ...
+		'' ...				
 		'uicontrol(gcf, ''Units'',''Normalized'', ''Position'',[-11 4 117 100].*s+q, ''Style'', ''frame'' );' ...
 		'uicontrol(gcf, ''Units'',''Normalized'', ''Position'',[-5 5 100 95].*s+q, ''String'', txt1, ''Style'',''text'', ''HorizontalAlignment'', ''left'' );' ...
 		'h = uicontrol(gcf, ''Style'', ''pushbutton'', ''string'', ''Close'', ''Units'',''Normalized'', ''Position'', [35 -10 25 10].*s+q, ''callback'', ''close(gcf);'');' ...
 		'clear txt1 q s h pos;' ];
-	set( hval, 'callback', command);
+	set( hval, 'callback', command); 
 	if isempty( EEG.stats.compenta )
 		set(hval, 'enable', 'off');
 	end;
-
+	
     % MODIFICA
 	%com = sprintf('pop_prop( %s, %d, %d, 0, %s);', inputname(1), typecomp, numcompo, vararg2str( { spec_opt } ) );
     	com = sprintf('pop_prop_ADJ( %s, %d, %d, 0, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %s);',...
             inputname(1), typecomp, numcompo, is_H, is_V, is_B, is_D,...
-            soglia_DV, diff_var, soglia_K, meanK, soglia_SED, SED,...
-            soglia_SAD, SAD, soglia_GDSF, GDSF, soglia_V, maxvar, soglia_D, maxdin );
+            soglia_DV, diff_var, soglia_K, med2_K, meanK, soglia_SED, med2_SED, SED, soglia_SAD, med2_SAD, SAD, ...
+        soglia_GDSF, med2_GDSF, GDSF, soglia_V, med2_V, maxvar, soglia_D, maxdin );
 
 else
 	%com = sprintf('pop_prop( %s, %d, %d, NaN, %s);', inputname(1), typecomp, numcompo, vararg2str( { spec_opt } ) );
     	com = sprintf('pop_prop_ADJ( %s, %d, %d, NaN, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %s);',...
             inputname(1), typecomp, numcompo, is_H, is_V, is_B, is_D,...
-            soglia_DV, diff_var, soglia_K, meanK, soglia_SED, SED,...
-            soglia_SAD, SAD, soglia_GDSF, GDSF, soglia_V, maxvar, soglia_D, maxdin );
-
-end;
-
-return;
-
-function com = pop_prop_FST(EEG, typecomp, numcompo, winhandle,listprops) %,spec_opt)
-
-% pop_prop_FST() - overloaded pop_prop() for FASTER plugin in SASICA.
-%
-%
-% Usage:
-%   >> com = pop_prop_FST(EEG, typecomp, numcompo, winhandle,listprops);
-%
-% Inputs:
-%   EEG        - current dataset structure or structure array
-%   typecomp   - [0|1] compute electrode property (1) or component
-%                property (0). Default is 1.
-%   numcompo   - channel or component number
-%   winhandle  - if this parameter is present or non-NaN, buttons for the
-%                rejection of the component are drawn. If
-%                non-zero, this parameter is used to backpropagate
-%                the color of the rejection button.
-%   listprops   - property listing as returned by FASTER
-%               a ncomps x 5 matrix with
-%                     1 Median gradient value, for high frequency stuff
-%                     2 Mean slope around the LPF band (spectral)
-%                     3 Kurtosis of spatial map
-%                     4 Hurst exponent
-%                     5 Eyeblink correlations
-%
-
-% ORIGINAL HELP:
-% pop_prop() - plot the properties of a channel or of an independent
-%              component.
-% Usage:
-%   >> pop_prop( EEG, typecomp); % pops up a query window
-%   >> pop_prop( EEG, typecomp, chan, winhandle);
-%
-% Inputs:
-%   EEG        - dataset structure (see EEGGLOBAL)
-%   typecomp   - [0|1] compute electrode property (1) or component
-%                property (0). Default is 1.
-%   chan       - channel or component number
-%   winhandle  - if this parameter is present or non-NaN, buttons for the
-%                rejection of the component are drawn. If
-%                non-zero, this parameter is used to backpropagate
-%                the color of the rejection button.
-%   spectral_options - [cell array] cell arry of options for the spectopo()
-%                      function.
-%
-
-% Copyright (C) 2009 Andrea Mognon and Marco Buiatti,
-% Center for Mind/Brain Sciences, University of Trento, Italy
-%
-% This program is free software; you can redistribute it and/or modify
-% it under the terms of the GNU General Public License as published by
-% the Free Software Foundation; either version 2 of the License, or
-% (at your option) any later version.
-%
-% This program is distributed in the hope that it will be useful,
-% but WITHOUT ANY WARRANTY; without even the implied warranty of
-% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-% GNU General Public License for more details.
-%
-% You should have received a copy of the GNU General Public License
-% along with this program; if not, write to the Free Software
-% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-
-com = '';
-if nargin < 1
-	help pop_prop_FST;
-	return;
-end;
-
-if nargin == 1
-	typecomp = 1;
-end;
-if typecomp == 0 & isempty(EEG.icaweights)
-   error('No ICA weights recorded for this set, first run ICA');
-end;
-if nargin == 2
-	promptstr    = { fastif(typecomp,'Channel number to plot:','Component number to plot:') ...
-                     'Spectral options (see spectopo help):' };
-	inistr       = { '1' '''freqrange'', [2 50]' };
-	result       = inputdlg2( promptstr, 'Component properties - pop_prop_FST()', 1,  inistr, 'pop_prop_FST');
-	if size( result, 1 ) == 0 return; end;
-
-	numcompo   = eval( [ '[' result{1} ']' ] );
-    spec_opt   = eval( [ '{' result{2} '}' ] );
-end;
-
-% plotting several component properties - STILL TO CHANGE
-% -------------------------------------
-if length(numcompo) > 1
-    for index = numcompo
-        pop_prop(EEG, typecomp, index);
-    end;
-	com = sprintf('pop_prop( %s, %d, [%s]);', inputname(1), typecomp, int2str(numcompo));
-    return;
-end;
-
-if numcompo < 1 | numcompo > EEG.nbchan
-   error('Component index out of range');
-end;
-
-% assumed input is numcompo
-% -------------------------
-try, icadefs;
-catch,
-	BACKCOLOR = [0.8 0.8 0.8];
-	GUIBUTTONCOLOR   = [0.8 0.8 0.8];
-end;
-basename = [fastif(typecomp,'Channel ', 'Component ') int2str(numcompo) ];
-
-fh = figure('name', ['pop_prop_FST() - ' basename ' properties'], 'color', BACKCOLOR, 'numbertitle', 'off', 'visible', 'off');
-pos = get(gcf,'Position');
-set(gcf,'Position', [pos(1) pos(2)-500+pos(4) 500 500], 'visible', 'on');
-pos = get(gca,'position'); % plot relative to current axes
-hh = gca;
-q = [pos(1) pos(2) 0 0];
-s = [pos(3) pos(4) pos(3) pos(4)]./100;
-axis off;
-
-% plotting topoplot
-% -----------------
-h = axes('Units','Normalized', 'Position',[-10 65 40 35].*s+q);
-
-%topoplot( EEG.icawinv(:,numcompo), EEG.chanlocs); axis square;
-
-if typecomp == 1 % plot single channel locations
-	topoplot( numcompo, EEG.chanlocs, 'chaninfo', EEG.chaninfo, ...
-             'electrodes','off', 'style', 'blank', 'emarkersize1chan', 12); axis square;
-else             % plot component map
-	topoplot( EEG.icawinv(:,numcompo), EEG.chanlocs, 'chaninfo', EEG.chaninfo, ...
-             'shading', 'interp', 'numcontour', 3); axis square;
-end;
-basename = [fastif(typecomp,'Channel ', 'IC') int2str(numcompo) ];
-% title([ basename fastif(typecomp, ' location', ' map')], 'fontsize', 14);
-title(basename, 'fontsize', 12);
-
-% plotting erpimage
-% -----------------
-hhh = axes('Units','Normalized', 'Position',[45 67 48 33].*s+q); %era height 38
-eeglab_options;
-if EEG.trials > 1
-    % put title at top of erpimage
-    axis off
-    hh = axes('Units','Normalized', 'Position',[45 67 48 33].*s+q);
-    EEG.times = linspace(EEG.xmin, EEG.xmax, EEG.pnts);
-    if EEG.trials < 6
-      ei_smooth = 1;
-    else
-      ei_smooth = 3;
-    end
-    if typecomp == 1 % plot component
-         offset = nan_mean(EEG.data(numcompo,:));
-         erpimage( EEG.data(numcompo,:)-offset, ones(1,EEG.trials)*10000, EEG.times , ...
-                       '', ei_smooth, 1, 'caxis', 2/3, 'cbar','erp');
-    else % plot channel
-          if option_computeica
-                  offset = nan_mean(EEG.icaact(numcompo,:));
-                  erpimage( EEG.icaact(numcompo,:)-offset, ones(1,EEG.trials)*10000, EEG.times , ...
-                       '', ei_smooth, 1, 'caxis', 2/3, 'cbar','erp', 'yerplabel', '');
-          else
-
-              icaacttmp = (EEG.icaweights(numcompo,:) * EEG.icasphere) ...
-                                   * reshape(EEG.data(1:size(EEG.icaweights,1),:,:), EEG.nbchan, EEG.trials*EEG.pnts);
-%                     icaacttmp = (EEG.icaweights(numcompo,:) * EEG.icasphere) ...
-%                                    * EEG.data(EEG.nbchan, EEG.trials*EEG.pnts);
-                  offset = nan_mean(icaacttmp);
-                  erpimage( icaacttmp-offset, ones(1,EEG.trials)*10000, EEG.times, ...
-                       '', ei_smooth, 1, 'caxis', 2/3, 'cbar','erp', 'yerplabel', '');
-          end;
-    end;
-    axes(hhh);
-    title(sprintf('%s activity \\fontsize{10}(global offset %3.3f)', basename, offset), 'fontsize', 12);
-else
-
-    % put title at top of erpimage
-    EI_TITLE = 'Continous data';
-    axis off
-    hh = axes('Units','Normalized', 'Position',[45 62 48 38].*s+q);
-    ERPIMAGELINES = 200; % show 200-line erpimage
-    while size(EEG.data,2) < ERPIMAGELINES*EEG.srate
-       ERPIMAGELINES = round(0.9 * ERPIMAGESLINES);
-    end
-    if ERPIMAGELINES > 2   % give up if data too small
-      if ERPIMAGELINES < 10
-         ei_smooth == 1;
-      else
-        ei_smooth = 3;
-      end
-      erpimageframes = floor(size(EEG.data,2)/ERPIMAGELINES);
-      erpimageframestot = erpimageframes*ERPIMAGELINES;
-      eegtimes = linspace(0, erpimageframes-1, EEG.srate/1000);
-      if typecomp == 1 % plot component
-           offset = nan_mean(EEG.data(numcompo,:));
-           erpimage( reshape(EEG.data(numcompo,1:erpimageframestot),erpimageframes,ERPIMAGELINES)-offset, ones(1,ERPIMAGELINES)*10000, eegtimes , ...
-                         EI_TITLE, ei_smooth, 1, 'caxis', 2/3, 'cbar');
-      else % plot channel
-            if option_computeica
-                    offset = nan_mean(EEG.icaact(numcompo,:));
-                    erpimage( ...
-              reshape(EEG.icaact(numcompo,1:erpimageframestot),erpimageframes,ERPIMAGELINES)-offset, ...
-                   ones(1,ERPIMAGELINES)*10000, eegtimes , ...
-                         EI_TITLE, ei_smooth, 1, 'caxis', 2/3, 'cbar','yerplabel', '');
-            else
-%                     icaacttmp = reshape(EEG.icaweights(numcompo,:) * EEG.icasphere) ...
-%                                      * reshape(EEG.data, erpimageframes, ERPIMAGELINES);
-
-                        icaacttmp = EEG.icaweights(numcompo,:) * EEG.icasphere ...
-                                     *EEG.data(:,1:erpimageframes*ERPIMAGELINES);
-
-                    offset = nan_mean(icaacttmp);
-                    erpimage( icaacttmp-offset, ones(1,ERPIMAGELINES)*10000, eegtimes, ...
-                         EI_TITLE, ei_smooth, 1, 'caxis', 2/3, 'cbar', 'yerplabel', '');
-            end;
-      end
-    else
-            axis off;
-            text(0.1, 0.3, [ 'No erpimage plotted' 10 'for small continuous data']);
-    end;
-    axes(hhh);
-end;
-
-% plotting spectrum
-% -----------------
-if ~exist('winhandle')
-    winhandle = NaN;
-end;
-if ~isnan(winhandle)
-	h = axes('units','normalized', 'position',[10 25 85 25].*s+q);
-    %h = axes('units','normalized', 'position',[5 10 95 35].*s+q); %%%
-    %CHANGE!
-else
-	h = axes('units','normalized', 'position',[10 15 85 30].*s+q);
-    %h = axes('units','normalized', 'position',[5 0 95 40].*s+q); %%%
-    %CHANGE!
-end;
-%h = axes('units','normalized', 'position',[45 5 60 40].*s+q);
-try
-	eeglab_options;
-    %next instr added for correct function! Andrea
-    option_computeica=1;
-	if typecomp == 1
-		%[spectra freqs] = spectopo( EEG.data(numcompo,:), EEG.pnts, EEG.srate, spec_opt{:},'freqrange', [0 45] );
-        [spectra freqs] = spectopo( EEG.data(numcompo,:), EEG.pnts, EEG.srate, 'freqrange', [0 45] );
-	else
-		if option_computeica
-
-			%[spectra freqs] = spectopo( EEG.icaact(numcompo,:), EEG.pnts, EEG.srate, 'mapnorm', EEG.icawinv(:,numcompo), spec_opt{:}, 'freqrange', [0 45]);
-            % CONTROL ADDED FOR CONTINUOUS DATA
-            if size(EEG.data,3)==1
-                EEG.icaact = EEG.icaweights*EEG.icasphere*EEG.data;
-            end
-            [spectra freqs] = spectopo( EEG.icaact(numcompo,:), EEG.pnts, EEG.srate, 'mapnorm', EEG.icawinv(:,numcompo),  'freqrange', [0 45]);
-		else
-			if exist('icaacttmp')~=1,
-
-				icaacttmp = (EEG.icaweights(numcompo,:)*EEG.icasphere)*reshape(EEG.data, EEG.nbchan, EEG.trials*EEG.pnts);
-			end;
-
-			%[spectra freqs] = spectopo( icaacttmp, EEG.pnts, EEG.srate, 'mapnorm', EEG.icawinv(:,numcompo), spec_opt{:} ,'freqrange', [0 45]);
-            [spectra freqs] = spectopo( icaacttmp, EEG.pnts, EEG.srate, 'mapnorm', EEG.icawinv(:,numcompo), 'freqrange', [0 45]);
-		end;
-	end;
-    set(gca,'fontsize',8);
-    % set up new limits
-    % -----------------
-    %freqslim = 50;
-	%set(gca, 'xlim', [0 min(freqslim, EEG.srate/2)]);
-    %spectra = spectra(find(freqs <= freqslim));
-	%set(gca, 'ylim', [min(spectra) max(spectra)]);
-
-	%tmpy = get(gca, 'ylim');
-    %set(gca, 'ylim', [max(tmpy(1),-1) tmpy(2)]);
-	set( get(gca, 'ylabel'), 'string', 'Power 10*log_{10}(\muV^{2}/Hz)', 'fontsize', 8);
-	set( get(gca, 'xlabel'), 'string', 'Frequency (Hz)', 'fontsize', 8);
-	title('Activity power spectrum', 'fontsize', 12);
-catch
-	axis off;
-	text(0.1, 0.3, [ 'Error: no spectrum plotted' 10 ' make sure you have the ' 10 'signal processing toolbox']);
-end;
-
-% ----------------------------------------------------------------
-% plotting IC properties
-% -----------------
-if ~exist('winhandle')
-    winhandle = NaN;
-end;
-if ~isnan(winhandle)
-	h = axes('units','normalized', 'position',[3 2 95 10].*s+q);
-else
-	h = axes('units','normalized', 'position',[3 0 95 10].*s+q);
-end;
-
-axis off
-str='FASTER - Detected as ';
-FASTER_reasons = {'High freq ' 'flat spectrum ' 'spatial Kurtosis ' 'Hurst exponent ' 'EOG correl '};
-%                     1 Median gradient value, for high frequency stuff
-%                     2 Mean slope around the LPF band (spectral)
-%                     3 Kurtosis of spatial map
-%                     4 Hurst exponent
-%                     5 Eyeblink correlations
-zlist = zscore(listprops);
-for i = 1:size(listprops,2)
-    fst(:,i) = min_z(listprops(:,i));
-end
-reasons = FASTER_reasons(fst(numcompo,:));
-if isempty(reasons)
-    str = 'FASTER says ok.';
-else
-    str = [str reasons{:}];
-end
-% set bar colors
-C={[1 0 0],[.6 0 .2],[1 1 0],[0 1 0], [0 1 1]};
-hold on
-for i = 1:size(listprops,2)
-    bar(i,zlist(numcompo,i),'facecolor',C{i});
-end
-xlim([0 size(listprops,2)+1])
-hold on
-hline([-3 3],'k');
-set(gca, 'ytick',[-3 3],'yticklabel',[-3 3],'xtick',1:5,'xticklabel',FASTER_reasons,'fontsize',10,...
-    'color','none');
-h = legend (FASTER_reasons,'location','eastoutside');
-set(h,'box','off','fontsize',10)
-ylabel('zscore')
-title(str)
-
-
-
-% -----------------------------------------------------------------
-
-
-% display buttons
-% ---------------
-
-if ~isnan(winhandle)
-	COLREJ = '[1 0.6 0.6]';
-	COLACC = '[0.75 1 0.75]';
-	% CANCEL button
-	% -------------
-	h  = uicontrol(gcf, 'Style', 'pushbutton', 'backgroundcolor', GUIBUTTONCOLOR, 'string', 'Cancel', 'Units','Normalized','Position',[-10 -10 15 6].*s+q, 'callback', 'close(gcf);');
-
-	% VALUE button
-	% -------------
-	hval  = uicontrol(gcf, 'Style', 'pushbutton', 'backgroundcolor', GUIBUTTONCOLOR, 'string', 'Values', 'Units','Normalized', 'Position', [15 -10 15 6].*s+q);
-
-	% REJECT button
-	% -------------
-	status = EEG.reject.gcompreject(numcompo);
-	hr = uicontrol(gcf, 'Style', 'pushbutton', 'backgroundcolor', eval(fastif(status,COLREJ,COLACC)), ...
-				'string', fastif(status, 'REJECT', 'ACCEPT'), 'Units','Normalized', 'Position', [40 -10 15 6].*s+q, 'userdata', status, 'tag', 'rejstatus');
-	command = [ 'set(gcbo, ''userdata'', ~get(gcbo, ''userdata''));' ...
-				'if get(gcbo, ''userdata''),' ...
-				'     set( gcbo, ''backgroundcolor'',' COLREJ ', ''string'', ''REJECT'');' ...
-				'else ' ...
-				'     set( gcbo, ''backgroundcolor'',' COLACC ', ''string'', ''ACCEPT'');' ...
-				'end;' ];
-	set( hr, 'callback', command);
-
-	% HELP button
-	% -------------
-	h  = uicontrol(gcf, 'Style', 'pushbutton', 'backgroundcolor', GUIBUTTONCOLOR, 'string', 'HELP', 'Units','Normalized', 'Position', [65 -10 15 6].*s+q, 'callback', 'pophelp(''pop_prop_FST'');');
-
-	% OK button
-	% ---------
- 	command = [ 'global EEG;' ...
- 				'tmpstatus = get( findobj(''parent'', gcbf, ''tag'', ''rejstatus''), ''userdata'');' ...
- 				'EEG.reject.gcompreject(' num2str(numcompo) ') = tmpstatus;' ];
-	if winhandle ~= 0
-	 	command = [ command ...
-	 				sprintf('if tmpstatus set(%3.15f, ''backgroundcolor'', %s); else set(%3.15f, ''backgroundcolor'', %s); end;', ...
-					winhandle, COLREJ, winhandle, COLACC)];
-	end;
-	command = [ command 'close(gcf); clear tmpstatus' ];
-	h  = uicontrol(gcf, 'Style', 'pushbutton', 'string', 'OK', 'backgroundcolor', GUIBUTTONCOLOR, 'Units','Normalized', 'Position',[90 -10 15 6].*s+q, 'callback', command);
-
-	% draw the figure for statistical values
-	% --------------------------------------
-	index = num2str( numcompo );
-	command = [ ...
-		'figure(''MenuBar'', ''none'', ''name'', ''Statistics of the component'', ''numbertitle'', ''off'');' ...
-		'' ...
-		'pos = get(gcf,''Position'');' ...
-		'set(gcf,''Position'', [pos(1) pos(2) 340 340]);' ...
-		'pos = get(gca,''position'');' ...
-		'q = [pos(1) pos(2) 0 0];' ...
-		's = [pos(3) pos(4) pos(3) pos(4)]./100;' ...
-		'axis off;' ...
-		''  ...
-		'txt1 = sprintf(''(\n' ...
-						'Entropy of component activity\t\t%2.2f\n' ...
-					    '> Rejection threshold \t\t%2.2f\n\n' ...
-					    ' AND                 \t\t\t----\n\n' ...
-					    'Kurtosis of component activity\t\t%2.2f\n' ...
-					    '> Rejection threshold \t\t%2.2f\n\n' ...
-					    ') OR                  \t\t\t----\n\n' ...
-					    'Kurtosis distibution \t\t\t%2.2f\n' ...
-					    '> Rejection threhold\t\t\t%2.2f\n\n' ...
-					    '\n' ...
-					    'Current thesholds sujest to %s the component\n\n' ...
-					    '(after manually accepting/rejecting the component, you may recalibrate thresholds for future automatic rejection on other datasets)'',' ...
-						'EEG.stats.compenta(' index '), EEG.reject.threshentropy, EEG.stats.compkurta(' index '), ' ...
-						'EEG.reject.threshkurtact, EEG.stats.compkurtdist(' index '), EEG.reject.threshkurtdist, fastif(EEG.reject.gcompreject(' index '), ''REJECT'', ''ACCEPT''));' ...
-		'' ...
-		'uicontrol(gcf, ''Units'',''Normalized'', ''Position'',[-11 4 117 100].*s+q, ''Style'', ''frame'' );' ...
-		'uicontrol(gcf, ''Units'',''Normalized'', ''Position'',[-5 5 100 95].*s+q, ''String'', txt1, ''Style'',''text'', ''HorizontalAlignment'', ''left'' );' ...
-		'h = uicontrol(gcf, ''Style'', ''pushbutton'', ''string'', ''Close'', ''Units'',''Normalized'', ''Position'', [35 -10 25 10].*s+q, ''callback'', ''close(gcf);'');' ...
-		'clear txt1 q s h pos;' ];
-	set( hval, 'callback', command);
-	if isempty( EEG.stats.compenta )
-		set(hval, 'enable', 'off');
-	end;
-
-    % MODIFICA
-	%com = sprintf('pop_prop( %s, %d, %d, 0, %s);', inputname(1), typecomp, numcompo, vararg2str( { spec_opt } ) );
-    	com = 'idontcare';
-
-else
-	%com = sprintf('pop_prop( %s, %d, %d, NaN, %s);', inputname(1), typecomp, numcompo, vararg2str( { spec_opt } ) );
-    	com = 'idontcare';
+            soglia_DV, diff_var, soglia_K, med2_K, meanK, soglia_SED, med2_SED, SED, soglia_SAD, med2_SAD, SAD, ...
+        soglia_GDSF, med2_GDSF, GDSF, soglia_V, med2_V, maxvar, soglia_D, maxdin );
 
 end;
 
@@ -3166,9 +2501,111 @@ function out = nan_mean(in)
 
 
 
+% trim_and_max() - Computes maximum value from vector 'vettore'
+% after removing the top 1% of the values
+% (to be outlier resistant)
+%
+% Usage:
+%   >> valore=trim_and_max(vettore);
+%
+% Inputs:
+%   vettore    - row vector
+%
+% Outputs:
+%   valore     - result            
+%
+%
+% Author: Andrea Mognon, Center for Mind/Brain Sciences, University of
+% Trento, 2009
+
+% Motivation taken from the following comment to our paper:
+% "On page 11 the authors motivate the use of the max5 function when computing
+% Maximum Epoch Variance because the simple maximum would be too sensitive
+% to spurious outliers. This is a good concern, however the max5 function would
+% still be sensitive to spurious outliers for very large data sets. In other words, if
+% the data set is large enough, one will be very likely to record more than five
+% outliers. The authors should use a trimmed max function that computes the
+% simple maximum after the top say .1% of the values have been removed from
+% consideration. This rejection criteria scales appropriately with the size of the data
+% set."
+
+% Copyright (C) 2009-2014 Andrea Mognon (1) and Marco Buiatti (2), 
+% (1) Center for Mind/Brain Sciences, University of Trento, Italy
+% (2) INSERM U992 - Cognitive Neuroimaging Unit, Gif sur Yvette, France
+%
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
+%
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+%
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+
+function valore=trim_and_max(vettore)
+
+
+dim=floor(.01*size(vettore,2)); % = 1% of vector length
+
+tmp=sort(vettore);
+valore= tmp(length(vettore)-dim);
+
+
+
+% trim_and_mean() - Computes average value from vector 'vettore'
+% after removing the top .1% of the values
+% (to be outlier resistant)
+%
+% Usage:
+%   >> valore=trim_and_mean(vettore);
+%
+% Inputs:
+%   vettore    - row vector
+%
+% Outputs:
+%   valore     - result            
+%
+% Copyright (C) 2009-2014 Andrea Mognon (1) and Marco Buiatti (2), 
+% (1) Center for Mind/Brain Sciences, University of Trento, Italy
+% (2) INSERM U992 - Cognitive Neuroimaging Unit, Gif sur Yvette, France
+%
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
+%
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+%
+% You should have received a copy of the GNU General Public License
+% along with this program; if not, write to the Free Software
+% Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+
+function valore=trim_and_mean(vettore)
+
+
+dim=floor(.01*size(vettore,2)); % = 1% of vector length
+
+tmp=sort(vettore);
+valore= mean (tmp(1:(length(vettore)-dim)));
+
+
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%   END ADJUST CODE   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%% END  ADJUST   CODE%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%   BELOW IS FASTER CODE %%%%%%%%%%%%%%%%%%%%%%%%%%%%
