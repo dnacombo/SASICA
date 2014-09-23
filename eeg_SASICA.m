@@ -689,19 +689,24 @@ for i = 1:numel(buttonnums)
         str = [str ',' num2str(ADJ.soglia_DV)];
         str = [str ',' num2str(ADJ.diff_var(buttonnums(i)))];
         str = [str ',' num2str(ADJ.soglia_K)];
+        str = [str ',' num2str(ADJ.med2_K)];
         str = [str ',' num2str(ADJ.meanK(buttonnums(i)))];
         str = [str ',' num2str(ADJ.soglia_SED)];
+        str = [str ',' num2str(ADJ.med2_SED)];
         str = [str ',' num2str(ADJ.SED(buttonnums(i)))];
         str = [str ',' num2str(ADJ.soglia_SAD)];
+        str = [str ',' num2str(ADJ.med2_SAD)];
         str = [str ',' num2str(ADJ.SAD(buttonnums(i)))];
         str = [str ',' num2str(ADJ.soglia_GDSF)];
+        str = [str ',' num2str(ADJ.med2_GDSF)];
         str = [str ',' num2str(ADJ.GDSF(buttonnums(i)))];
         str = [str ',' num2str(ADJ.soglia_V)];
-        str = [str ',' num2str(ADJ.maxvar(buttonnums(i)))];
+        str = [str ',' num2str(ADJ.med2_V)];
+        str = [str ',' num2str(ADJ.nuovaV(buttonnums(i)))];
         str = [str ',' num2str(ADJ.soglia_D)];
         str = [str ',' num2str(ADJ.maxdin(buttonnums(i)))];
         str = [str ');'''];
-        cb = [regexprep(cb,'\{.*\}',str) ';'];
+        cb = [regexprep(cb,'\{.*\}',str)];
         uimenu(hcmenu, 'Label', 'ADJUST results', 'Callback', cb,'tag',['ctxt_ADJ' num2str(buttonnums(i))]);
     end
     if cfg.FASTER.enable
