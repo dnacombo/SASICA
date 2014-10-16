@@ -115,6 +115,7 @@ end
 
 ncomp= size(EEG.icawinv,2); % ncomp is number of components
 icaacts = eeg_getdatact(EEG,'component',1:ncomp);
+EEG.icaact = icaacts;
 EEG.reject.SASICA = [];
 for ifield = 1:size(rejfields,1)
 %     EEG.reject.SASICA.(rejfields{ifield}) = false(1,ncomp);
