@@ -64,7 +64,6 @@
 %     You should have received a copy of the GNU General Public License
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-% Some of the measures used here are based on http://bishoptechbits.blogspot.com/2011/05/automated-removal-of-independent.html
 
 function [EEG, cfg] = eeg_SASICA(EEG,cfg)
 
@@ -141,6 +140,7 @@ if cfg.autocorr.enable
         end
     end
     EEG.reject.SASICA.(strrep(rejfields{1,1},'rej','')) = autocorr;
+    EEG.reject.SASICA.(strrep(rejfields{1,1},'rej','thresh')) = dropautocorr;
     EEG.reject.SASICA.(rejfields{1,1}) = logical(rej);
     %----------------------------------------------------------------
     if ~noplot(1)
@@ -193,6 +193,7 @@ if cfg.focalcomp.enable
         end
     end
     EEG.reject.SASICA.(strrep(rejfields{2,1},'rej','')) = mywt(1,:);
+    EEG.reject.SASICA.(strrep(rejfields{2,1},'rej','thresh')) = focalICAout;
     EEG.reject.SASICA.(rejfields{2,1}) = logical(rej);
     %----------------------------------------------------------------
     if ~noplot(2)
@@ -234,6 +235,7 @@ if cfg.trialfoc.enable
     % in descending order
     rej = myact(:,:,1) > focaltrialout;
     EEG.reject.SASICA.(strrep(rejfields{3,1},'rej','')) = myact(:,:,1)';
+    EEG.reject.SASICA.(strrep(rejfields{3,1},'rej','thresh')) = focaltrialout;
     EEG.reject.SASICA.(rejfields{3,1}) = rej';
 
     %----------------------------------------------------------------
@@ -284,6 +286,7 @@ if cfg.SNR.enable
     SNR = std(av1,[],2)./std(av2,[],2); % ratio of the standard deviations of activity and baseline
     rej = SNR < snrcut;
     EEG.reject.SASICA.(strrep(rejfields{4,1},'rej','')) = SNR';
+    EEG.reject.SASICA.(strrep(rejfields{4,1},'rej','thresh')) = snrcut;
     EEG.reject.SASICA.(rejfields{4,1}) = rej';
 
     %----------------------------------------------------------------
@@ -322,6 +325,7 @@ if cfg.resvar.enable
     rej = resvar > thresh;
 
     EEG.reject.SASICA.(strrep(rejfields{5,1},'rej','')) = resvar;
+    EEG.reject.SASICA.(strrep(rejfields{5,1},'rej','thresh')) = thresh;
     EEG.reject.SASICA.(rejfields{5,1}) = rej;
 
     %----------------------------------------------------------------
@@ -402,7 +406,9 @@ if cfg.EOGcorr.enable
     end
 
     EEG.reject.SASICA.([strrep(rejfields{6,1},'rej','') 'VEOG']) = cV;
+    EEG.reject.SASICA.([strrep(rejfields{6,1},'rej','thresh') 'VEOG']) = corthreshV;
     EEG.reject.SASICA.([strrep(rejfields{6,1},'rej','') 'HEOG']) = cH;
+    EEG.reject.SASICA.([strrep(rejfields{6,1},'rej','thresh') 'HEOG']) = corthreshH;
     EEG.reject.SASICA.(rejfields{6,1}) = [rejV|rejH];
 
     %----------------------------------------------------------------
@@ -459,12 +465,14 @@ if cfg.chancorr.enable
             rej = sum(rej)>=1;
         end
         EEG.reject.SASICA.([strrep(rejfields{6,1},'rej','') 'chans']) = c;
+        EEG.reject.SASICA.([strrep(rejfields{6,1},'rej','thresh') 'chans']) = corthresh;
         EEG.reject.SASICA.(rejfields{6,1}) = [rej|rejH|rejV];
     else
         noplot(6) = 1;
         disp('Could not find the channels to compute correlation.');
         c = NaN(1,ncomp);
         EEG.reject.SASICA.([strrep(rejfields{6,1},'rej','') 'chans']) = c;
+        EEG.reject.SASICA.([strrep(rejfields{6,1},'rej','thresh') 'chans']) = corthresh;
         rej = false(1,ncomp);
         EEG.reject.SASICA.(rejfields{6,1}) = [rej|rejV|rejH];
     end
@@ -793,11 +801,17 @@ basename = ['Component ' int2str(chanorcomp) ];
 fh = figure('name', ['pop_prop() - ' basename ' properties'], 'color', BACKCOLOR, 'numbertitle', 'off', 'visible', 'on');
 pos = get(gcf,'position');
 set(gcf,'Position', [pos(1) pos(2)-700+pos(4) 500 700], 'visible', 'on');
+pos = get(gca,'position'); % plot relative to current axes
+hh = gca;
+q = [pos(1) pos(2) 0 0];
+s = [pos(3) pos(4) pos(3) pos(4)]./100;
+delete(gca);
 p = panel();
 p.margin = [10 10 10 10];
 p.pack('v',{.35 []});
-p(1).margintop = 10;
-p(1).pack('h',{.4 []});
+p(1).margin = [0 0 0 0];
+p(1).pack('h',{.4 [] .01});
+
 
 % plotting topoplot
 p(1,1).select()
@@ -806,7 +820,7 @@ topoplot( EEG.icawinv(:,chanorcomp), EEG.chanlocs, 'chaninfo', EEG.chaninfo, ...
 title(basename, 'fontsize', 14); 
 
 % plotting erpimage
-p(1,2).margin = [15 15 15 15];
+p(1,2).margin = [15 15 5 15];
 p(1,2).select();  
 eeglab_options; 
 if EEG.trials > 1
@@ -865,9 +879,12 @@ end;
 if ~exist('winhandle')
     winhandle = NaN;
 end;
-p(2).pack('v',{.3 []})
-p(2,1).margin = [25 25 10 10];
-p(2,1).select();
+p(2).pack('v',{.3 [] .1})
+p(2,1).pack('h',{.01,[],.01});
+p(2,1).margin = [15 10 0 10];
+p(2,1,1).margin = 0;
+p(2,1,3).margin = 0;
+p(2,1,2).select();
 try
     spectopo( EEG.icaact(chanorcomp,:), EEG.pnts, EEG.srate, 'mapnorm', EEG.icawinv(:,chanorcomp), spec_opt{:} );
     % set( get(gca, 'ylabel'), 'string', 'Power 10*log_{10}(\muV^{2}/Hz)', 'fontsize', 12); 
@@ -883,40 +900,51 @@ catch
 end;
 
 %%%% Add SASICA measures.
+%           eye          muscle/noise    channel     ~ok
+colors = { [0 .75 .75]      [0 0 1]      [0 .5 0] [.2 .2 .2]};
 
 computed = fieldnames(EEG.reject.SASICA);
-computed = computed(regexpcell(computed,'rej','inv'));
-SASICAplot = [];FSTplot = []; ADJplot = [];
-SASICAplotX = {};FSTis = []; ADJis = [];
+computed = computed(regexpcell(computed,'rej|thresh','inv'));
+computedthresh = regexprep(computed,'ica','icathresh');
+toPlot = {};
+toPlot_axprops = {};
+toPlot_title = {}; SXticks = {};co = [];
 for i = 1:numel(computed)
     if strcmp(computed{i},'icaADJUST')
         struct2ws(EEG.reject.SASICA.icaADJUST)
-        ADJplot=[(SAD(chanorcomp)-med2_SAD)/(soglia_SAD-med2_SAD)
+        toPlot{end+1} = [(SAD(chanorcomp)-med2_SAD)/(soglia_SAD-med2_SAD)
             (SED(chanorcomp)-med2_SED)/(soglia_SED-med2_SED)
             (GDSF(chanorcomp)-med2_GDSF)/(soglia_GDSF-med2_GDSF)
             (nuovaV(chanorcomp)-med2_V)/(soglia_V-med2_V)
             (meanK(chanorcomp)-med2_K)/(soglia_K-med2_K)]';
         ADJis = '';
+        aco = repmat(colors{4},5,1);
         if ismember(chanorcomp,horiz)
             ADJis = [ADJis 'HEM/'];
+            aco(2,:) = colors{1};
         end
         if ismember(chanorcomp,vert)
             ADJis = [ADJis 'VEM/'];
+            aco([1 4],:) = repmat(colors{1},2,1);
         end
-        if ismember(chanorcomp,vert)
+        if ismember(chanorcomp,blink)
             ADJis = [ADJis 'Blink/'];
+            aco(1,:) = colors{1};
         end
-        if ismember(chanorcomp,vert)
+        if ismember(chanorcomp,disc)
             ADJis = [ADJis 'Disc/'];
+            aco([3 4],:) = repmat(colors{3},2,1);
         end
         if isempty(ADJis)
             ADJis = 'OK';
         else
             ADJis(end) = [];
         end
+        toPlot_title{end+1} = ['ADJUST: ' ADJis];
+        toPlot_axprops{end+1} = {'ColorOrder' aco 'ylim' [0 2] 'xtick' 1:5 'xticklabel' {'SAD' 'SED' 'GDSF' 'MEV' 'TK'}};
     elseif strcmp(computed{i},'icaFASTER')
         listprops = EEG.reject.SASICA.icaFASTER.listprops;
-        str='FASTER - Detected as ';
+        str='FASTER: ';
         FASTER_reasons = {'High freq ' 'flat spectrum ' 'spatial Kurtosis ' 'Hurst exponent ' 'EOG correl '};
         %                     1 Median gradient value, for high frequency stuff
         %                     2 Mean slope around the LPF band (spectral)
@@ -929,33 +957,55 @@ for i = 1:numel(computed)
         end
         reasons = FASTER_reasons(fst(chanorcomp,:));
         if isempty(reasons)
-            str = 'FASTER says ok.';
+            str = [str 'OK'];
         else
             str = [str reasons{:}];
         end
         FSTis = str;
-        FSTplot = zlist(chanorcomp,:);
+        toPlot{end+1} = abs(zlist(chanorcomp,:))/3;% normalized by threshold
+        toPlot_title{end+1} = FSTis;
+        toPlot_axprops{end+1} = {'ColorOrder' [colors{2};colors{2};colors{3};colors{2};colors{1}] 'ylim' [0 2] 'xtick',1:numel(toPlot{end}),'xticklabel',{'MedGrad' 'MeanSpecSlope' 'SpatKurt' 'HurstExp' 'CorrBlink'}};
     else
-        rejfields = {'icaautocorr' 'AutoCorr'
-            'icafocalcomp' 'FocC'
-            'icatrialfoc' 'FocT'
-            'icaSNR' 'SNR'
-            'icaresvar' 'ResV'
-            'icachancorr' 'CorrC'
-            'icaADJUST' 'ADJUST selections'
-            'icaFASTER' 'FASTER selections'
+        rejfields = {%                direction to threshold
+            'icaautocorr'       'AutoCorr'  '<'                 colors{2}
+            'icafocalcomp'      'FocC'      '>'                 colors{3}
+            'icatrialfoc'       'FocT'      '>'                 colors{3}
+            'icaSNR'            'SNR'       '<'                 colors{2}
+            'icaresvar'         'ResV'      '>'                 colors{2}
+            'icachancorrVEOG'   'CorrV'     '>'                 colors{1}
+            'icachancorrHEOG'   'CorrH'     '>'                 colors{1}
+            'icachancorrchans'  'CorrC'     '>'                 colors{3}
             };
-        SASICAplot(end+1) = EEG.reject.SASICA.(computed{i})(chanorcomp);
-        SASICAplotX{end+1} = rejfields{strcmp(computed{i},rejfields(:,1)),2};
+        if isempty(toPlot)
+            toPlot{1} = [];
+            toPlot_axprops{1} = {};
+            toPlot_title{1} = 'SASICA measures';
+        end
+        toPlot{1}(end+1) = EEG.reject.SASICA.(computed{i})(chanorcomp)/EEG.reject.SASICA.(computedthresh{i});
+        if strcmp(rejfields{strcmp(computed{i},rejfields(:,1)),3},'<')
+            toPlot{1}(end) = 1/toPlot{1}(end);
+        end
+        SXticks{end+1} = rejfields{strcmp(computed{i},rejfields(:,1)),2};
+        co(end+1,:) = rejfields{strcmp(computed{i},rejfields(:,1)),4};
     end
 end
+if not(isempty(SXticks))
+    toPlot_axprops{1}(end+1:end+6) = {'ylim' [0 2] 'xtick' 1:numel(SXticks) 'Xticklabel' SXticks};
+end
 
-
-h = axes('units','normalized', 'position',[40 35 65 20].*s+q);
-
-h = axes('units','normalized', 'position',[40 5 65 20].*s+q);
-h = axes('units','normalized', 'position',[-10 5 40 20].*s+q);
-
+% p(2,2).margin = 0;
+p(2,2).pack('v',numel(toPlot));
+for i = 1:numel(toPlot)
+    p(2,2,i).select()
+    hold on
+    set(gca,toPlot_axprops{i}{:});
+    cs = get(gca,'colorOrder');
+    for j = 1:numel(toPlot{i})
+        bar(j,toPlot{i}(j),'facecolor',cs(rem(j-1,numel(toPlot{i}))+1,:));
+    end
+    hline(1,':k')
+    title(toPlot_title{i});
+end
 
 	
 % display buttons
