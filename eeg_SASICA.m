@@ -172,7 +172,7 @@ if cfg.autocorr.enable
         plot(toplot,'o','color',rejfields{1,3})
         for i = 1:numel(autocorr)
             h = scatter(i,autocorr(i),20,'k','filled');
-            cb = sprintf('pop_prop( %s, 0, %d, findobj(''tag'',''comp%d''), { ''freqrange'', [1 50] });', inputname(1), i, i);
+            cb = sprintf('eeg_SASICA(EEG, ''pop_prop( %s, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', inputname(1), i, i);
             set(h,'buttondownfcn',cb);
         end
     end
@@ -213,7 +213,7 @@ if cfg.focalcomp.enable
         title('Components with focal activity')
         for i = 1:numel(mywt(1,:))
             h = scatter(i,mywt(1,i),20,'k','filled');
-            cb = sprintf('pop_prop( %s, 0, %d, findobj(''tag'',''comp%d''), { ''freqrange'', [1 50] });', inputname(1), i, i);
+                        cb = sprintf('eeg_SASICA(EEG, ''pop_prop( %s, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', inputname(1), i, i); 
             set(h,'buttondownfcn',cb);
         end
     end
@@ -256,7 +256,7 @@ if cfg.trialfoc.enable
             plot(xl(2)-diff(xl)/20,yl(2)-diff(yl)/20,'marker','.','color',rejfields{3,3},'markersize',40)
             for i = 1:numel(myact(:,:,1))
                 h = scatter(i,myact(i),20,'k','filled');
-                cb = sprintf('pop_prop( %s, 0, %d, findobj(''tag'',''comp%d''), { ''freqrange'', [1 50] });', inputname(1), i, i);
+                            cb = sprintf('eeg_SASICA(EEG, ''pop_prop( %s, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', inputname(1), i, i); 
                 set(h,'buttondownfcn',cb);
             end
 
@@ -304,7 +304,7 @@ if cfg.SNR.enable
         plot(xl(2)-diff(xl)/20,yl(2)-diff(yl)/20,'marker','.','color',rejfields{4,3},'markersize',40)
         for i = 1:numel(SNR)
             h = scatter(i,SNR(i),20,'k','filled');
-            cb = sprintf('pop_prop( %s, 0, %d, findobj(''tag'',''comp%d''), { ''freqrange'', [1 50] });', inputname(1), i, i);
+                        cb = sprintf('eeg_SASICA(EEG, ''pop_prop( %s, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', inputname(1), i, i); 
             set(h,'buttondownfcn',cb);
         end
         title({'Signal to noise ratio between' ['Time of interest ' num2str(snrPOI,'%g ') ' and Baseline ' num2str(snrBL,'%g ') ' ms.']})
@@ -344,7 +344,7 @@ if cfg.resvar.enable
         plot(xl(2)-diff(xl)/20,yl(2)-diff(yl)/20,'marker','.','color',rejfields{5,3},'markersize',40)
         for i = 1:numel(resvar)
             h = scatter(i,resvar(i),20,'k','filled');
-            cb = sprintf('pop_prop( %s, 0, %d, findobj(''tag'',''comp%d''), { ''freqrange'', [1 50] });', inputname(1), i, i);
+                        cb = sprintf('eeg_SASICA(EEG, ''pop_prop( %s, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', inputname(1), i, i); 
             set(h,'buttondownfcn',cb);
         end
         title({'Residual variance of dipole fit'})
@@ -437,7 +437,7 @@ if cfg.EOGcorr.enable
         for i = 1:numel(cH)
             h(1) = scatter(i,cH(i),20,'k','filled');
             h(2) = scatter(i,cV(i),20,'k','filled');
-            cb = sprintf('pop_prop( %s, 0, %d, findobj(''tag'',''comp%d''), { ''freqrange'', [1 50] });', inputname(1), i, i);
+                        cb = sprintf('eeg_SASICA(EEG, ''pop_prop( %s, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', inputname(1), i, i); 
             set(h,'buttondownfcn',cb);
         end
     end
@@ -510,7 +510,7 @@ if cfg.chancorr.enable
         for ichan = 1:size(c,1)
             for i = 1:size(c,2)
                 h = scatter(i,c(ichan,i),20,'k','filled');
-                cb = sprintf('pop_prop( %s, 0, %d, findobj(''tag'',''comp%d''), { ''freqrange'', [1 50] });', inputname(1), i, i);
+                            cb = sprintf('eeg_SASICA(EEG, ''pop_prop( %s, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', inputname(1), i, i); 
                 set(h,'buttondownfcn',cb);
             end
         end
@@ -995,6 +995,7 @@ end
 
 % p(2,2).margin = 0;
 p(2,2).pack('v',numel(toPlot));
+p(2,2).de.margintop = 12;
 for i = 1:numel(toPlot)
     p(2,2,i).select()
     hold on
@@ -3634,6 +3635,4 @@ lengths  =  any(all_l(:, rejection_options.measure), 2);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%   END FASTER CODE   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-
 
