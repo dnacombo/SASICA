@@ -876,12 +876,14 @@ end;
 
 % plotting spectrum
 % -----------------
-if ~exist('winhandle')
+if ~exist('winhandle') || isnan(winhandle)
     winhandle = NaN;
+    p(2).pack('v',{.3 [] })
+else
+    p(2).pack('v',{.3 [] .1})
 end;
-p(2).pack('v',{.3 [] .1})
 p(2,1).pack('h',{.01,[],.01});
-p(2,1).margin = [15 10 0 10];
+p(2,1).margin = [15 15 0 55];
 p(2,1,1).margin = 0;
 p(2,1,3).margin = 0;
 p(2,1,2).select();
@@ -891,7 +893,8 @@ try
 	% set( get(gca, 'xlabel'), 'string', 'Frequency (Hz)', 'fontsize', 12); 
     axis on
     xlabel('')
-	title('Activity power spectrum', 'fontsize', 10); 
+	h = title('Activity power spectrum', 'fontsize', 10);
+    set(h,'position',get(h,'position')+[-15 -7 0]);
     set(gca,'fontSize',10)
 catch
 	axis off;
@@ -900,9 +903,9 @@ catch
 end;
 
 %%%% Add SASICA measures.
-%           eye          muscle/noise    channel     ~ok
+%               eye      muscle/noise    channel     ~ok
 colors = { [0 .75 .75]      [0 0 1]      [0 .5 0] [.2 .2 .2]};
-
+% C={[1 0 0],[.6 0 .2],[1 1 0],[0 1 0], [0 1 1]};% colors used in ADJ
 computed = fieldnames(EEG.reject.SASICA);
 computed = computed(regexpcell(computed,'rej|thresh','inv'));
 computedthresh = regexprep(computed,'ica','icathresh');
@@ -964,40 +967,47 @@ for i = 1:numel(computed)
         FSTis = str;
         toPlot{end+1} = abs(zlist(chanorcomp,:))/3;% normalized by threshold
         toPlot_title{end+1} = FSTis;
-        toPlot_axprops{end+1} = {'ColorOrder' [colors{2};colors{2};colors{3};colors{2};colors{1}] 'ylim' [0 2] 'xtick',1:numel(toPlot{end}),'xticklabel',{'MedGrad' 'MeanSpecSlope' 'SpatKurt' 'HurstExp' 'CorrBlink'}};
+        toPlot_axprops{end+1} = {'ColorOrder' [colors{2};colors{2};colors{3};colors{2};colors{1}] 'ylim' [0 2] 'xtick',1:numel(toPlot{end}),'xticklabel',{'MedGrad' 'SpecSlope' 'SpatKurt' 'HurstExp' 'CorrBlink'}};
     else
-        rejfields = {%                direction to threshold
-            'icaautocorr'       'AutoCorr'  '<'                 colors{2}
-            'icafocalcomp'      'FocC'      '>'                 colors{3}
-            'icatrialfoc'       'FocT'      '>'                 colors{3}
-            'icaSNR'            'SNR'       '<'                 colors{2}
-            'icaresvar'         'ResV'      '>'                 colors{2}
-            'icachancorrVEOG'   'CorrV'     '>'                 colors{1}
-            'icachancorrHEOG'   'CorrH'     '>'                 colors{1}
-            'icachancorrchans'  'CorrC'     '>'                 colors{3}
+        rejfields = {
+            'icaautocorr'       'AutoCorr'  colors{2}
+            'icafocalcomp'      'FocC'      colors{3}
+            'icatrialfoc'       'FocT'      colors{3}
+            'icaSNR'            'SNR'       colors{2}
+            'icaresvar'         'ResV'      colors{2}
+            'icachancorrVEOG'   'CorrV'     colors{1}
+            'icachancorrHEOG'   'CorrH'     colors{1}
+            'icachancorrchans'  'CorrC'     colors{3}
             };
         if isempty(toPlot)
             toPlot{1} = [];
             toPlot_axprops{1} = {};
-            toPlot_title{1} = 'SASICA measures';
+            toPlot_title{1} = 'SASICA';
         end
-        toPlot{1}(end+1) = EEG.reject.SASICA.(computed{i})(chanorcomp)/EEG.reject.SASICA.(computedthresh{i});
-        if strcmp(rejfields{strcmp(computed{i},rejfields(:,1)),3},'<')
-            toPlot{1}(end) = 1/toPlot{1}(end);
+        switch computed{i}
+            case 'icaautocorr'
+                toPlot{1}(end+1) = 2 - (EEG.reject.SASICA.(computed{i})(chanorcomp) +1)/(EEG.reject.SASICA.(computedthresh{i}) +1);
+            case 'icaSNR'
+                toPlot{1}(end+1) = EEG.reject.SASICA.(computedthresh{i})/EEG.reject.SASICA.(computed{i})(chanorcomp);
+            otherwise
+                toPlot{1}(end+1) = EEG.reject.SASICA.(computed{i})(chanorcomp)/EEG.reject.SASICA.(computedthresh{i});
         end
         SXticks{end+1} = rejfields{strcmp(computed{i},rejfields(:,1)),2};
-        co(end+1,:) = rejfields{strcmp(computed{i},rejfields(:,1)),4};
+        co(end+1,:) = rejfields{strcmp(computed{i},rejfields(:,1)),3};
     end
 end
 if not(isempty(SXticks))
     toPlot_axprops{1}(end+1:end+6) = {'ylim' [0 2] 'xtick' 1:numel(SXticks) 'Xticklabel' SXticks};
 end
 
-% p(2,2).margin = 0;
 p(2,2).pack('v',numel(toPlot));
-p(2,2).de.margintop = 12;
+p(2,2).de.margintop = 0;
 for i = 1:numel(toPlot)
-    p(2,2,i).select()
+    p(2,2,i).pack('h',{.2 []});
+    p(2,2,i,1).select();
+    text(1.1,0.5,strjust(strwrap(toPlot_title{i},15),'right'),'horizontalalignment','right');
+    axis off
+    p(2,2,i,2).select()
     hold on
     set(gca,toPlot_axprops{i}{:});
     cs = get(gca,'colorOrder');
@@ -1005,7 +1015,8 @@ for i = 1:numel(toPlot)
         bar(j,toPlot{i}(j),'facecolor',cs(rem(j-1,numel(toPlot{i}))+1,:));
     end
     hline(1,':k')
-    title(toPlot_title{i});
+    ytick([1 2])
+    yticklabel({'Th','2*Th'})
 end
 
 	

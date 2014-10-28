@@ -114,6 +114,9 @@ try
         varargin(1) = [];
     else
         EEG = evalin('base','EEG;');
+        if isempty(varargin{1})
+            varargin(1) = [];
+        end
     end
 catch
     EEG = pop_loadset;
@@ -145,6 +148,7 @@ elseif numel(varargin) > 1 && ischar(varargin{1})
     EEG = eeg_SASICA(EEG,cfg);
     setpref('SASICA','cfg',cfg);
     handles.EEG = EEG;
+    return;
 else
     cfg = getpref('SASICA','cfg',[]);
 end
@@ -968,7 +972,7 @@ def.focalcomp.focalICAout = 8;% zscore of one electrode for component drop out
 def.trialfoc.enable = true;
 def.trialfoc.focaltrialout = 20;% zscore of one trial for component drop out
 
-def.resvar.enable = true;
+def.resvar.enable = false;
 def.resvar.thresh = 15;% %residual variance allowed
 
 def.SNR.enable = false;
