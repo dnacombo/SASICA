@@ -41,6 +41,12 @@
 %                               Thresholding for EEG artifact Rejection.
 %                               Journal of Neuroscience Methods, 192(1),
 %                               152Ã¢ÂÂ162. doi:16/j.jneumeth.2010.07.015)
+%              MARA selection:  use MARA classification engine to select components
+%                               (see Winkler I, Haufe S, Tangermann M.
+%                               2011. Automatic Classification of
+%                               Artifactual ICA-Components for Artifact
+%                               Removal in EEG Signals. Behavioral and
+%                               Brain Functions. 7:30.)
 %
 %   >> [EEG com] = SASICA( [], 'key', 'val');
 %       Takes optional key val pairs to set specific options from the
@@ -114,7 +120,7 @@ try
         varargin(1) = [];
     else
         EEG = evalin('base','EEG;');
-        if isempty(varargin{1})
+        if ~isempty(varargin) && isempty(varargin{1})
             varargin(1) = [];
         end
     end
@@ -995,7 +1001,8 @@ def.FASTER.blinkchans = [];
 
 def.ADJUST.enable = true;
 
-def.opts.NbMin = 1; % minimum number of the above rejection methods that must be satisfied to reject a component.
+def.MARA.enable = false;
+
 def.opts.FontSize = 14;
 def.opts.noplot = 0;
 
@@ -1086,3 +1093,13 @@ elseif not(isempty(s))
 elseif isempty(s);
     s = d;
 end
+
+
+% --- Executes on button press in check_MARA_enable.
+function check_MARA_enable_Callback(hObject, eventdata, handles)
+% hObject    handle to check_MARA_enable (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of check_MARA_enable
+check_enable(hObject,handles)
