@@ -237,7 +237,20 @@ function edit_autocorr_dropautocorr_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_autocorr_dropautocorr as text
 %        str2double(get(hObject,'String')) returns contents of edit_autocorr_dropautocorr as a double
-set(hObject,'String',num2str(str2double(get(hObject,'String')),'%.02g'))
+setThreshString(hObject)
+
+function setThreshString(hObject)
+dat = regexp(get(hObject,'String'),'(auto)(.*)','tokens');
+if not(isempty(dat)) && not(isempty(strfind(dat{1}{1},'auto')))
+    if isempty(strtrim(dat{1}{2}))
+        dat{1}{2} = '2';
+    end
+    dat = ['auto ' num2str(str2double(dat{1}{2}))];
+else
+    dat = num2str(str2double(get(hObject,'String')),'%g');
+end
+set(hObject,'String',dat)
+
 
 % --- Executes during object creation, after setting all properties.
 function edit_autocorr_dropautocorr_CreateFcn(hObject, eventdata, handles)
@@ -260,7 +273,7 @@ function edit_autocorr_autocorrint_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_autocorr_autocorrint as text
 %        str2double(get(hObject,'String')) returns contents of edit_autocorr_autocorrint as a double
-set(hObject,'String',num2str(str2double(get(hObject,'String')),'%g'))
+setThreshString(hObject)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -284,7 +297,7 @@ function edit_focalcomp_focalICAout_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_focalcomp_focalICAout as text
 %        str2double(get(hObject,'String')) returns contents of edit_focalcomp_focalICAout as a double
-set(hObject,'String',num2str(str2double(get(hObject,'String')),'%g'))
+setThreshString(hObject)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -380,7 +393,7 @@ function edit_EOGcorr_corthreshV_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_EOGcorr_corthreshV as text
 %        str2double(get(hObject,'String')) returns contents of edit_EOGcorr_corthreshV as a double
-set(hObject,'String',num2str(str2num(get(hObject,'String')),'%g'))
+setThreshString(hObject)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -445,7 +458,7 @@ function edit_EOGcorr_corthreshH_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_EOGcorr_corthreshH as text
 %        str2double(get(hObject,'String')) returns contents of edit_EOGcorr_corthreshH as a double
-set(hObject,'String',num2str(str2num(get(hObject,'String')),'%g'))
+setThreshString(hObject)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -493,7 +506,7 @@ function edit_chancorr_corthresh_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_chancorr_corthresh as text
 %        str2double(get(hObject,'String')) returns contents of edit_chancorr_corthresh as a double
-set(hObject,'String',num2str(str2num(get(hObject,'String')),'%g'))
+setThreshString(hObject)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -604,7 +617,7 @@ function edit_trialfoc_focaltrialout_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_trialfoc_focaltrialout as text
 %        str2double(get(hObject,'String')) returns contents of edit_trialfoc_focaltrialout as a double
-set(hObject,'String',num2str(str2num(get(hObject,'String')),'%g'))
+setThreshString(hObject)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1015,6 +1028,7 @@ function edit_resvar_thresh_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_resvar_thresh as text
 %        str2double(get(hObject,'String')) returns contents of edit_resvar_thresh as a double
+setThreshString(hObject)
 
 
 % --- Executes during object creation, after setting all properties.

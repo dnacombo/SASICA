@@ -138,9 +138,12 @@ if cfg.autocorr.enable
     rej = false(1,ncomp);
     for k=1:ncomp
         y=icaacts(k,:,:);
-        yy=xcorr(mean(y,3),Ncorrint,'coeff');
+        yy=xcorr(mean(y,3),Ncorrint,'coeff'); 
         autocorr(k) = yy(1);
-        if yy(1) < dropautocorr
+    end
+    dropautocorr = readauto(dropautocorr,autocorr,'-');
+    for k = 1:ncomp
+        if autocorr(k) < dropautocorr
             rej(k)=true;
         end
     end
@@ -193,6 +196,9 @@ if cfg.focalcomp.enable
     clear mywt
     for k=1:ncomp
         mywt(:,k) = sort(abs(zscore(EEG.icawinv(:,k))),'descend'); %sorts standardized weights in descending order
+    end
+    focalICAout = readauto(focalICAout,mywt(1,:),'+');
+    for k = 1:ncomp
         if mywt(1,k) > focalICAout
             rej(k)=true;
         end
@@ -237,6 +243,7 @@ if cfg.trialfoc.enable
     end
     struct2ws(cfg.trialfoc);
     myact =sort(abs(zscore(range(icaacts,2),[],3)),3,'descend'); % sorts standardized range of trial activity
+    focaltrialout = readauto(focaltrialout,myact(:,:,1)','+');
     % in descending order
     rej = myact(:,:,1) > focaltrialout;
     EEG.reject.SASICA.(strrep(rejfields{3,1},'rej','')) = myact(:,:,1)';
@@ -289,6 +296,7 @@ if cfg.SNR.enable
     av1 = mean(zz(:,POIpts,:),3); % average activity in POI across trials
     av2 = mean(zz(:,BLpts,:),3); % activity in baseline acros trials
     SNR = std(av1,[],2)./std(av2,[],2); % ratio of the standard deviations of activity and baseline
+    snrcut = readauto(snrcut,SNR,'-');
     rej = SNR < snrcut;
     EEG.reject.SASICA.(strrep(rejfields{4,1},'rej','')) = SNR';
     EEG.reject.SASICA.(strrep(rejfields{4,1},'rej','thresh')) = snrcut;
@@ -396,6 +404,7 @@ if cfg.EOGcorr.enable
     if ~noV
         VEOG = VEOG(:);
         cV  = abs(corr(ICs,VEOG))';
+        corthreshV = readauto(corthreshV,cV,'+');
         rejV = cV > corthreshV ;
     else
         cV = NaN(1,size(ICs,2));
@@ -404,6 +413,7 @@ if cfg.EOGcorr.enable
     if ~noH
         HEOG = HEOG(:);
         cH  = abs(corr(ICs,HEOG))';
+        corthreshH = readauto(corthreshH,cH,'+');
         rejH = cH > corthreshH;
     else
         cH = NaN(1,size(ICs,2));
@@ -465,6 +475,7 @@ if cfg.chancorr.enable
         chanEEG = EEG.data(chan,:)';
         ICs = icaacts(:,:)';
         c  = abs(corr(ICs,chanEEG))';
+        corthresh = mean(readauto(corthresh,c,'+'));
         rej = c > corthresh ;
         if size(rej,1) > 1
             rej = sum(rej)>=1;
@@ -582,7 +593,7 @@ if cfg.MARA.enable
     
     %----------------------------------------------------------------
 end
-if cfg.ADJUST.enable||cfg.FASTER.enable
+if (cfg.ADJUST.enable||cfg.FASTER.enable) && any(~noplot)
     uicontrol('style','text','string','for ADJUST, FASTER or MARA results, right click on component buttons in the other window(s)','units','normalized','position',[0 0 1 .05],'backgroundcolor',get(gcf,'color'));
 end
 fprintf('... Done.\n')
@@ -864,15 +875,18 @@ p(2,1).pack('h',{.01,[],.01});
 p(2,1).margin = [15 15 0 55];
 p(2,1,1).margin = 0;
 p(2,1,3).margin = 0;
-p(2,1,2).select();
+p(2,1,2).pack('v',{.01 []});
+p(2,1,2,1).margin = 0;
+p(2,1,2,2).margintop = 5;
+p(2,1,2,2).select();
 try
     spectopo( EEG.icaact(chanorcomp,:), EEG.pnts, EEG.srate, 'mapnorm', EEG.icawinv(:,chanorcomp), spec_opt{:} );
     % set( get(gca, 'ylabel'), 'string', 'Power 10*log_{10}(\muV^{2}/Hz)', 'fontsize', 12);
     % set( get(gca, 'xlabel'), 'string', 'Frequency (Hz)', 'fontsize', 12);
     axis on
-    xlabel('')
+    xlabel('Frequency (Hz)')
     h = title('Activity power spectrum', 'fontsize', 10);
-    set(h,'position',get(h,'position')+[-15 -7 0]);
+%     set(h,'position',get(h,'position')+[-15 -7 0]);
     set(gca,'fontSize',10)
 catch
     axis off;
@@ -894,13 +908,13 @@ toPlot_title = {}; SXticks = {};co = [];
 for i = 1:numel(computed)
     if strcmp(computed{i},'icaADJUST')
         struct2ws(EEG.reject.SASICA.icaADJUST)
-        toPlot{end+1} = [(SAD(chanorcomp)-med2_SAD)/(soglia_SAD-med2_SAD)
-            (SED(chanorcomp)-med2_SED)/(soglia_SED-med2_SED)
-            (GDSF(chanorcomp)-med2_GDSF)/(soglia_GDSF-med2_GDSF)
-            (nuovaV(chanorcomp)-med2_V)/(soglia_V-med2_V)
-            (meanK(chanorcomp)-med2_K)/(soglia_K-med2_K)]';
+        toPlot{end+1}{1} = (SAD(chanorcomp)-med2_SAD)/(soglia_SAD-med2_SAD);
+        toPlot{end}{2} = (SED(chanorcomp)-med2_SED)/(soglia_SED-med2_SED);
+        toPlot{end}{3} = (GDSF(chanorcomp)-med2_GDSF)/(soglia_GDSF-med2_GDSF);
+        toPlot{end}{4} = (nuovaV(chanorcomp)-med2_V)/(soglia_V-med2_V);
+        toPlot{end}{5} = (meanK(chanorcomp)-med2_K)/(soglia_K-med2_K);
         ADJis = '';
-        aco = repmat(colors{4},6,1);
+        aco = repmat(colors{4},numel(toPlot{end}),1);
         if ismember(chanorcomp,horiz)
             ADJis = [ADJis 'HEM/'];
             aco([2 4],:) = repmat(colors{1},2,1);
@@ -927,12 +941,12 @@ for i = 1:numel(computed)
             'ylim' [0 2],...
             'ytick' [1 2],...
             'yticklabel' {'Th' '2*Th'},...
-            'xtick' 1:size(aco,1),...
+            'xtick' 1:numel(toPlot{end}),...
             'xticklabel' {'SAD' 'SED' 'GDSF' 'MEV' 'TK'}};
     elseif strcmp(computed{i},'icaFASTER')
         listprops = EEG.reject.SASICA.icaFASTER.listprops;
         str='FASTER: ';
-        FASTER_reasons = {'High freq ' 'flat spectrum ' 'spatial Kurtosis ' 'Hurst exponent ' 'EOG correl '};
+        FASTER_reasons = {'HighFreq ' 'FlatSpectrum ' 'SpatialKurtosis ' 'HurstExponent ' 'EOGCorrel '};
         %                     1 Median gradient value, for high frequency stuff
         %                     2 Mean slope around the LPF band (spectral)
         %                     3 Kurtosis of spatial map
@@ -949,18 +963,21 @@ for i = 1:numel(computed)
             str = [str reasons{:}];
         end
         FSTis = str;
-        toPlot{end+1} = abs(zlist(chanorcomp,:))/3;% normalized by threshold
+        toPlot{end+1} = {};
+        for ip = 1:numel(zlist(chanorcomp,:))
+            toPlot{end}{ip} = abs(zlist(chanorcomp,ip))/3;% normalized by threshold
+        end
         toPlot_title{end+1} = FSTis;
         toPlot_axprops{end+1} = {'ColorOrder' [colors{2};colors{2};colors{3};colors{2};colors{1}],...
             'ylim' [0 2],...
             'ytick' [1 2],...
             'yticklabel' {'Th' '2*Th'},...
             'xtick',1:numel(toPlot{end}),...
-            'xticklabel',{'MedGrad' 'SpecSlope' 'SpatKurt' 'HurstExp' 'CorrBlink'}};
+            'xticklabel',{'MedGrad' 'SpecSl' 'SK' 'HE' 'EOGCorr'}};
     elseif strcmp(computed{i},'icaMARA')
         info = EEG.reject.SASICA.icaMARA.info;
         str='MARA: ';
-        MARA_meas = {'Curr Dens Norm ' 'Spat Range ' 'Avg Loc Skew ' '\lambda ' '8-13 Pow' '1/F Fit '};
+        MARA_meas = {'CurrDensNorm ' 'SpatRange ' 'AvgLocSkew ' '\lambda ' '8-13 Pow' '1/F Fit '};
         %                     1 Current Density Norm
         %                     2 Spatial Range
         %                     3 Average Local Skewness
@@ -973,7 +990,10 @@ for i = 1:numel(computed)
             str = [str 'Reject    '];
         end
         MARAis = [str '(' num2str(round(100*info.posterior_artefactprob(chanorcomp)),'%g') '%)'];
-        toPlot{end+1} = info.normfeats(:,chanorcomp) ;
+        toPlot{end+1} = {};
+        for ip = 1:numel(info.normfeats(:,chanorcomp))
+            toPlot{end}{ip} = info.normfeats(ip,chanorcomp) ;
+        end
         toPlot_title{end+1} = MARAis;
         toPlot_axprops{end+1} = {'ColorOrder' repmat(colors{4},numel(MARA_meas),1),...
             'ylimmode' 'auto',...
@@ -982,27 +1002,27 @@ for i = 1:numel(computed)
             };
     else
         rejfields = {
-            'icaautocorr'       'AutoCorr'  colors{2} 
-            'icafocalcomp'      'FocC'      colors{3}
-            'icatrialfoc'       'FocT'      colors{3}
-            'icaSNR'            'SNR'       colors{2}
-            'icaresvar'         'ResV'      colors{2}
-            'icachancorrVEOG'   'CorrV'     colors{1}
-            'icachancorrHEOG'   'CorrH'     colors{1}
-            'icachancorrchans'  'CorrC'     colors{3}
+            'icaautocorr'       'LoAutoCor'   colors{2} 
+            'icafocalcomp'      'FocCh'       colors{3}
+            'icatrialfoc'       'FocTr'        colors{3}
+            'icaSNR'            'LoSNR'        colors{2}
+            'icaresvar'         'ResV'          colors{2}
+            'icachancorrVEOG'   'CorrV'         colors{1}
+            'icachancorrHEOG'   'CorrH'         colors{1}
+            'icachancorrchans'  'CorrC'         colors{3}
             };
         if isempty(toPlot)
-            toPlot{1} = [];
+            toPlot{1} = {};
             toPlot_axprops{1} = {};
             toPlot_title{1} = 'SASICA';
         end
         switch computed{i}
             case 'icaautocorr'
-                toPlot{1}(end+1) = 2 - (EEG.reject.SASICA.(computed{i})(chanorcomp) +1)/(EEG.reject.SASICA.(computedthresh{i}) +1);
+                toPlot{1}{end+1} = 2 - (EEG.reject.SASICA.(computed{i})(chanorcomp) +1)/(EEG.reject.SASICA.(computedthresh{i}) +1);
             case 'icaSNR'
-                toPlot{1}(end+1) = EEG.reject.SASICA.(computedthresh{i})/EEG.reject.SASICA.(computed{i})(chanorcomp);
+                toPlot{1}{end+1} = EEG.reject.SASICA.(computedthresh{i})/EEG.reject.SASICA.(computed{i})(chanorcomp);
             otherwise
-                toPlot{1}(end+1) = EEG.reject.SASICA.(computed{i})(chanorcomp)/EEG.reject.SASICA.(computedthresh{i});
+                toPlot{1}{end+1} = EEG.reject.SASICA.(computed{i})(:,chanorcomp)/EEG.reject.SASICA.(computedthresh{i});
         end
         SXticks{end+1} = rejfields{strcmp(computed{i},rejfields(:,1)),2};
         co(end+1,:) = rejfields{strcmp(computed{i},rejfields(:,1)),3};
@@ -1029,7 +1049,8 @@ for i = 1:numel(toPlot)
     set(gca,toPlot_axprops{i}{:});
     cs = get(gca,'colorOrder');
     for j = 1:numel(toPlot{i})
-        bar(j,toPlot{i}(j),'facecolor',cs(rem(j-1,numel(toPlot{i}))+1,:));
+        xj = linspace(j-(numel(toPlot{i}{j})>1)*.3,j+(numel(toPlot{i}{j})>1)*.3,numel(toPlot{i}{j}));
+        bar(xj,toPlot{i}{j},'facecolor',cs(rem(j-1,size(cs,1))+1,:));
     end
     hline(1,':k')
 end
@@ -1188,6 +1209,21 @@ else
     end
     return;
 end
+
+function thresh = readauto(thresh,dat,comp)
+% if thresh starts with 'auto'
+% compute auto threshold as mean(dat) +/- N std(dat)
+% with N read in the string thresh = 'auto N'
+% if not, use thresh as a value
+if isstr(thresh) && strncmp(thresh,'auto',4)
+    if numel(thresh) > 4
+        threshsigma = str2num(thresh(5:end));
+    else
+        threshsigma = 2;
+    end
+    thresh = eval(['mean(dat,2)' comp 'threshsigma * std(dat,[],2)']);
+end
+
 
 
 function [nb,channame,strnames] = chnb(channame, varargin)
@@ -1551,7 +1587,7 @@ function tw = strwrap(t,n)
 % breaking characters (i.e. not cutting words strangely).
 
 t = deblank(t(:)');
-seps = '\s-';
+seps = '[\s-]';
 tw = '';
 while not(isempty(t))
     breaks = regexp(t,seps);
