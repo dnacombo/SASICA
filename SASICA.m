@@ -41,6 +41,12 @@
 %                               Thresholding for EEG artifact Rejection.
 %                               Journal of Neuroscience Methods, 192(1),
 %                               152Ã¢ÂÂ162. doi:16/j.jneumeth.2010.07.015)
+%              MARA selection:  use MARA classification engine to select components
+%                               (see Winkler I, Haufe S, Tangermann M.
+%                               2011. Automatic Classification of
+%                               Artifactual ICA-Components for Artifact
+%                               Removal in EEG Signals. Behavioral and
+%                               Brain Functions. 7:30.)
 %
 %   >> [EEG com] = SASICA( [], 'key', 'val');
 %       Takes optional key val pairs to set specific options from the
@@ -114,6 +120,9 @@ try
         varargin(1) = [];
     else
         EEG = evalin('base','EEG;');
+        if ~isempty(varargin) && isempty(varargin{1})
+            varargin(1) = [];
+        end
     end
 catch
     EEG = pop_loadset;
@@ -145,6 +154,7 @@ elseif numel(varargin) > 1 && ischar(varargin{1})
     EEG = eeg_SASICA(EEG,cfg);
     setpref('SASICA','cfg',cfg);
     handles.EEG = EEG;
+    return;
 else
     cfg = getpref('SASICA','cfg',[]);
 end
@@ -227,7 +237,20 @@ function edit_autocorr_dropautocorr_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_autocorr_dropautocorr as text
 %        str2double(get(hObject,'String')) returns contents of edit_autocorr_dropautocorr as a double
-set(hObject,'String',num2str(str2double(get(hObject,'String')),'%.02g'))
+setThreshString(hObject)
+
+function setThreshString(hObject)
+dat = regexp(get(hObject,'String'),'(auto)(.*)','tokens');
+if not(isempty(dat)) && not(isempty(strfind(dat{1}{1},'auto')))
+    if isempty(strtrim(dat{1}{2}))
+        dat{1}{2} = '2';
+    end
+    dat = ['auto ' num2str(str2double(dat{1}{2}))];
+else
+    dat = num2str(str2double(get(hObject,'String')),'%g');
+end
+set(hObject,'String',dat)
+
 
 % --- Executes during object creation, after setting all properties.
 function edit_autocorr_dropautocorr_CreateFcn(hObject, eventdata, handles)
@@ -250,7 +273,7 @@ function edit_autocorr_autocorrint_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_autocorr_autocorrint as text
 %        str2double(get(hObject,'String')) returns contents of edit_autocorr_autocorrint as a double
-set(hObject,'String',num2str(str2double(get(hObject,'String')),'%g'))
+setThreshString(hObject)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -274,7 +297,7 @@ function edit_focalcomp_focalICAout_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_focalcomp_focalICAout as text
 %        str2double(get(hObject,'String')) returns contents of edit_focalcomp_focalICAout as a double
-set(hObject,'String',num2str(str2double(get(hObject,'String')),'%g'))
+setThreshString(hObject)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -370,7 +393,7 @@ function edit_EOGcorr_corthreshV_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_EOGcorr_corthreshV as text
 %        str2double(get(hObject,'String')) returns contents of edit_EOGcorr_corthreshV as a double
-set(hObject,'String',num2str(str2num(get(hObject,'String')),'%g'))
+setThreshString(hObject)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -435,7 +458,7 @@ function edit_EOGcorr_corthreshH_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_EOGcorr_corthreshH as text
 %        str2double(get(hObject,'String')) returns contents of edit_EOGcorr_corthreshH as a double
-set(hObject,'String',num2str(str2num(get(hObject,'String')),'%g'))
+setThreshString(hObject)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -483,7 +506,7 @@ function edit_chancorr_corthresh_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_chancorr_corthresh as text
 %        str2double(get(hObject,'String')) returns contents of edit_chancorr_corthresh as a double
-set(hObject,'String',num2str(str2num(get(hObject,'String')),'%g'))
+setThreshString(hObject)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -594,7 +617,7 @@ function edit_trialfoc_focaltrialout_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_trialfoc_focaltrialout as text
 %        str2double(get(hObject,'String')) returns contents of edit_trialfoc_focaltrialout as a double
-set(hObject,'String',num2str(str2num(get(hObject,'String')),'%g'))
+setThreshString(hObject)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -968,7 +991,7 @@ def.focalcomp.focalICAout = 8;% zscore of one electrode for component drop out
 def.trialfoc.enable = true;
 def.trialfoc.focaltrialout = 20;% zscore of one trial for component drop out
 
-def.resvar.enable = true;
+def.resvar.enable = false;
 def.resvar.thresh = 15;% %residual variance allowed
 
 def.SNR.enable = false;
@@ -991,7 +1014,8 @@ def.FASTER.blinkchans = [];
 
 def.ADJUST.enable = true;
 
-def.opts.NbMin = 1; % minimum number of the above rejection methods that must be satisfied to reject a component.
+def.MARA.enable = false;
+
 def.opts.FontSize = 14;
 def.opts.noplot = 0;
 
@@ -1004,6 +1028,7 @@ function edit_resvar_thresh_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'String') returns contents of edit_resvar_thresh as text
 %        str2double(get(hObject,'String')) returns contents of edit_resvar_thresh as a double
+setThreshString(hObject)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -1082,3 +1107,13 @@ elseif not(isempty(s))
 elseif isempty(s);
     s = d;
 end
+
+
+% --- Executes on button press in check_MARA_enable.
+function check_MARA_enable_Callback(hObject, eventdata, handles)
+% hObject    handle to check_MARA_enable (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of check_MARA_enable
+check_enable(hObject,handles)
