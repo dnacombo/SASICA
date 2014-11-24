@@ -559,11 +559,6 @@ if cfg.ADJUST.enable
     
     EEG.reject.SASICA.(strrep(rejfields{7,1},'rej','')) = ADJ;
     EEG.reject.SASICA.(rejfields{7,1}) = rej;
-<<<<<<< HEAD
-        
-=======
-    
->>>>>>> FETCH_HEAD
     %----------------------------------------------------------------
 end
 if cfg.FASTER.enable
@@ -578,7 +573,6 @@ if cfg.FASTER.enable
     
     EEG.reject.SASICA.(strrep(rejfields{8,1},'rej','')) = FST;
     EEG.reject.SASICA.(rejfields{8,1}) = FST.rej;
-    
     
     %----------------------------------------------------------------
 end
@@ -597,6 +591,7 @@ if cfg.MARA.enable
     
     %----------------------------------------------------------------
 end
+
 if (cfg.ADJUST.enable||cfg.FASTER.enable) && any(~noplot)
     uicontrol('style','text','string','for ADJUST, FASTER or MARA results, right click on component buttons in the other window(s)','units','normalized','position',[0 0 1 .05],'backgroundcolor',get(gcf,'color'));
 end
