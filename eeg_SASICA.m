@@ -114,6 +114,7 @@ if any(~noplot)
     figure(321541);clf;% just a random number so we always work in the same figure
     BACKCOLOR           = [.93 .96 1];
     set(gcf,'numbertitle', 'off','name','Automatic component rejection measures','color',BACKCOLOR)
+    isubplot = 1;
 end
 
 
@@ -152,9 +153,9 @@ if cfg.autocorr.enable
     EEG.reject.SASICA.(rejfields{1,1}) = logical(rej);
     %----------------------------------------------------------------
     if ~noplot(1)
-        subplot(2,3,1);cla
+        subplot(2,3,isubplot);cla;isubplot = isubplot+1;
         set(gca,'fontsize',FontSize)
-        plot(autocorr,'k');
+        plot(autocorr,'k','linestyle','none');
         
         hold on
         xlim([0 ncomp+1]);
@@ -169,7 +170,7 @@ if cfg.autocorr.enable
         %     C = permute(C,[2 3 1]);
         %     set(h,'alphadata',1-galpha,'alphadatamapping','scaled','facealpha','interp',...
         %         'CData',C,'CDataMapping','direct')
-        plot(xl,[dropautocorr dropautocorr],'r');
+        hline(dropautocorr,'r');
         
         plot(xl(2)-diff(xl)/20,yl(2)-diff(yl)/20,'marker','.','color',rejfields{1,3},'markersize',40)
         xlabel('Components')
@@ -208,13 +209,13 @@ if cfg.focalcomp.enable
     EEG.reject.SASICA.(rejfields{2,1}) = logical(rej);
     %----------------------------------------------------------------
     if ~noplot(2)
-        subplot(2,3,2);cla
+        subplot(2,3,isubplot);cla;isubplot = isubplot+1;
         set(gca,'fontsize',FontSize)
         toplot = mywt(1,:);
-        plot(toplot,'k');
+        plot(toplot,'k','linestyle','none');
         toplot(toplot < focalICAout) = NaN;
         hold on
-        plot(xlim,[focalICAout focalICAout],'r');
+        hline(focalICAout,'r');
         plot(toplot,'o','color',rejfields{2,3});
         xlim([0 ncomp+1]);
         xl = xlim;yl = ylim;
@@ -252,16 +253,16 @@ if cfg.trialfoc.enable
     
     %----------------------------------------------------------------
     if ~noplot(3)
-        subplot(2,3,3);cla
+        subplot(2,3,isubplot);cla;isubplot = isubplot+1;
         if EEG.trials > 1
             set(gca,'fontsize',FontSize)
             hold on
             toplot = myact(:,:,1);
-            plot(toplot,'k')
+            plot(toplot,'k','linestyle','none')
             toplot(toplot < focaltrialout) = NaN;
             plot(1:ncomp,toplot,'o','color',rejfields{3,3});
             xlim([0 ncomp+1])
-            plot(xlim,[focaltrialout focaltrialout],'r');
+            hline(focaltrialout,'r');
             xl = xlim;yl =ylim;
             xlabel('Components')
             ylabel('Standardized peak trial activity')
@@ -304,13 +305,13 @@ if cfg.SNR.enable
     
     %----------------------------------------------------------------
     if ~noplot(4)
-        subplot(2,3,4);cla
+        subplot(2,3,isubplot);cla;isubplot = isubplot+1;
         set(gca,'fontsize',FontSize)
-        plot(SNR,'k');
+        plot(SNR,'k','linestyle','none');
         hold on
         xlim([0 ncomp+1]);
         xl = xlim; yl = ylim;
-        plot(xl,[snrcut snrcut],'r');
+        hline(snrcut,'r');
         toplot = SNR;
         toplot(toplot > snrcut) = NaN;
         plot(toplot,'o','color',rejfields{4,3})
@@ -343,14 +344,14 @@ if cfg.resvar.enable
     
     %----------------------------------------------------------------
     if ~noplot(5)
-        subplot(2,3,5);cla
+        subplot(2,3,isubplot);cla;isubplot = isubplot+1;
         set(gca,'fontsize',FontSize)
-        plot(resvar,'k');
+        plot(resvar,'k','linestyle','none');
         hold on
         xlim([0 ncomp+1]);
         ylim([0 100]);
         xl = xlim; yl = ylim;
-        plot(xl,[thresh thresh],'r');
+        hline(thresh,'r');
         toplot = resvar;
         toplot(toplot < thresh) = NaN;
         plot(toplot,'o','color',rejfields{5,3})
@@ -408,6 +409,7 @@ if cfg.EOGcorr.enable
         rejV = cV > corthreshV ;
     else
         cV = NaN(1,size(ICs,2));
+        corthreshV = 0;
         rejV = false(size(cV));
     end
     if ~noH
@@ -417,6 +419,7 @@ if cfg.EOGcorr.enable
         rejH = cH > corthreshH;
     else
         cH = NaN(1,size(ICs,2));
+        corthreshH = 0;
         rejH = false(size(cH));
     end
     
@@ -428,14 +431,16 @@ if cfg.EOGcorr.enable
     
     %----------------------------------------------------------------
     if ~noplot(6)
-        subplot(2,3,6);cla
+        subplot(2,3,isubplot);cla;isubplot = isubplot+1;
         set(gca,'fontsize',FontSize)
-        [hplotcorr] = plot([cV;cH]');
+        cols = get(gca,'colororder');
+        [hplotcorr] = plot([cV;cH]','.','linestyle','none');
+        icol = 2;
         hold all
         xlim([0 ncomp+1]);
         xl = xlim;yl = ylim;
-        plot(xlim,[corthreshV corthreshV ],'r');
-        plot(xlim,[corthreshH corthreshH ],'m');
+        hline(corthreshV,'color',cols(1,:));
+        hline(corthreshH,'color',cols(2,:));
         
         title(['Correlation with EOG'])
         legstr = {'VEOG' 'HEOG'};
@@ -450,8 +455,8 @@ if cfg.EOGcorr.enable
         plot(xl(2)-diff(xl)/20,yl(2)-diff(yl)/20,'marker','.','color',rejfields{6,3},'markersize',40)
         legend(legstr,'fontsize',10, 'location', 'best');
         for i = 1:numel(cH)
-            h(1) = scatter(i,cH(i),20,'k','filled');
-            h(2) = scatter(i,cV(i),20,'k','filled');
+            h(1) = scatter(i,cH(i),20,cols(1,:),'filled');
+            h(2) = scatter(i,cV(i),20,cols(2,:),'filled');
             cb = sprintf('eeg_SASICA(EEG, ''pop_prop( %s, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', inputname(1), i, i);
             set(h,'buttondownfcn',cb);
         end
@@ -495,19 +500,26 @@ if cfg.chancorr.enable
     
     %----------------------------------------------------------------
     if ~noplot(6);
-        subplot(2,3,6);
+        if exist('hplotcorr','var')
+            isubplot = isubplot-1;
+        end
+        subplot(2,3,isubplot);
         if ~cfg.EOGcorr.enable
             cla;
             set(gca,'fontsize',FontSize);
+            cols = get(gca,'colororder');
         end
         hold all
-        if not(exist('hplotcorr'))
+        if not(exist('hplotcorr','var'))
             hplotcorr = [];
         end
-        [hplotcorr(end+1:end+numel(chan))] = plot([c]');
+        icol = numel(hplotcorr);
+        for ichan = 1:numel(chan)
+            [hplotcorr(end+1)] = plot([c(ichan,:)]','.','linestyle','none','color',cols(rem(icol+ichan-1,size(cols,1))+1,:));
+        end
         xlim([0 ncomp+1]);
         xl = xlim;yl = ylim;
-        plot(xlim,[corthresh corthresh ],'b');
+        hline(corthresh,'r');
         title(['Correlation with channels'])
         if cfg.EOGcorr.enable
             legstr = {'VEOG' 'HEOG' cellchannames{:}};
@@ -525,7 +537,7 @@ if cfg.chancorr.enable
         legend(hplotcorr,legstr,'fontsize',10, 'location', 'best');
         for ichan = 1:size(c,1)
             for i = 1:size(c,2)
-                h = scatter(i,c(ichan,i),20,'k','filled');
+                h = scatter(i,c(ichan,i),20,cols(rem(icol+ichan-1,size(cols,1))+1,:),'filled');
                 cb = sprintf('eeg_SASICA(EEG, ''pop_prop( %s, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', inputname(1), i, i);
                 set(h,'buttondownfcn',cb);
             end
@@ -592,8 +604,11 @@ if cfg.MARA.enable
     %----------------------------------------------------------------
 end
 
+EEG.reject.SASICA.var = var(EEG.icaact(:,:),[],2);% variance of each component
+
 if (cfg.ADJUST.enable||cfg.FASTER.enable) && any(~noplot)
-    uicontrol('style','text','string','for ADJUST, FASTER or MARA results, right click on component buttons in the other window(s)','units','normalized','position',[0 0 1 .05],'backgroundcolor',get(gcf,'color'));
+    h = uicontrol('style','text','string','for ADJUST or FASTER results, click on component buttons in the other window(s)','units','normalized','position',[0 0 1 .05],'backgroundcolor',get(gcf,'color'));
+    uistack(h,'bottom')
 end
 fprintf('... Done.\n')
 
@@ -878,7 +893,7 @@ end;
 
 % plotting spectrum
 % -----------------
-if ~exist('winhandle') || isnan(winhandle)
+if ~exist('winhandle') || isempty(winhandle) || isnan(winhandle)
     winhandle = NaN;
     p(2).pack('v',{.3 [] })
 else
@@ -912,7 +927,7 @@ end;
 colors = { [0 .75 .75]      [0 0 1]      [0 .5 0] [.2 .2 .2]};
 % C={[1 0 0],[.6 0 .2],[1 1 0],[0 1 0], [0 1 1]};% colors used in ADJ
 computed = fieldnames(EEG.reject.SASICA);
-computed = computed(regexpcell(computed,'rej|thresh','inv'));
+computed = computed(regexpcell(computed,'rej|thresh|^var$','inv'));
 computedthresh = regexprep(computed,'ica','icathresh');
 computedrej = regexprep(computed,'ica','icarej');
 toPlot = {};
@@ -1015,7 +1030,7 @@ for i = 1:numel(computed)
             };
     else
         rejfields = {
-            'icaautocorr'       'LoAutoCor'   colors{2} 
+            'icaautocorr'       'LoAC'   colors{2} 
             'icafocalcomp'      'FocCh'       colors{3}
             'icatrialfoc'       'FocTr'        colors{3}
             'icaSNR'            'LoSNR'        colors{2}
@@ -1047,6 +1062,7 @@ if not(isempty(SXticks))
         'yticklabel' {'Th' '2*Th'} ...
         'xtick' 1:numel(SXticks) ...
         'Xticklabel' SXticks...
+        'xlim',[.5 numel(SXticks)+.5],...
         'colororder',co};
 end
 
@@ -1839,7 +1855,7 @@ if length(size(EEG.data))==3
     
 else
     
-    num_epoch=0;
+    num_epoch=1;
     
 end
 

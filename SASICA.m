@@ -600,6 +600,7 @@ for i_f = 1:numel(fedits)
 
     end
 end
+cfg.opts.noplot = get(handles.checkNoPlot,'Value');
 
 [EEG cfg] = eeg_SASICA(EEG,cfg);
 setpref('SASICA','cfg',cfg);
@@ -982,14 +983,14 @@ SASICA(def)
 function def = getdefs
 
 def.autocorr.enable = true;
-def.autocorr.dropautocorr = .5;% Will drop components with autocorrelation less than this value;
-def.autocorr.autocorrint = 12;% will compute autocorrelation with this many milliseconds lag
+def.autocorr.dropautocorr = 'auto';
+def.autocorr.autocorrint = 20;% will compute autocorrelation with this many milliseconds lag
 
 def.focalcomp.enable = true;
-def.focalcomp.focalICAout = 8;% zscore of one electrode for component drop out
+def.focalcomp.focalICAout = 'auto';
 
 def.trialfoc.enable = true;
-def.trialfoc.focaltrialout = 20;% zscore of one trial for component drop out
+def.trialfoc.focaltrialout = 'auto';
 
 def.resvar.enable = false;
 def.resvar.thresh = 15;% %residual variance allowed
@@ -1000,13 +1001,13 @@ def.SNR.snrBL = [-Inf 0];% period of no interest (noise)
 def.SNR.snrcut = 1;% SNR below this threshold will be dropped
 
 def.EOGcorr.enable = true;
-def.EOGcorr.corthreshV = .6;% threshold correlation with vertical EOG
+def.EOGcorr.corthreshV = 'auto 4';% threshold correlation with vertical EOG
 def.EOGcorr.Veogchannames = [];% vertical channel(s)
-def.EOGcorr.corthreshH = .6;% threshold correlation with horizontal EOG
+def.EOGcorr.corthreshH = 'auto 4';% threshold correlation with horizontal EOG
 def.EOGcorr.Heogchannames = [];% horizontal channel(s)
 
 def.chancorr.enable = false;
-def.chancorr.corthresh = .6;% threshold correlation
+def.chancorr.corthresh = 'auto 4';% threshold correlation
 def.chancorr.channames = [];% channel(s)
 
 def.FASTER.enable = true;
@@ -1117,3 +1118,12 @@ function check_MARA_enable_Callback(hObject, eventdata, handles)
 
 % Hint: get(hObject,'Value') returns toggle state of check_MARA_enable
 check_enable(hObject,handles)
+
+
+% --- Executes on button press in checkNoPlot.
+function checkNoPlot_Callback(hObject, eventdata, handles)
+% hObject    handle to checkNoPlot (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkNoPlot
