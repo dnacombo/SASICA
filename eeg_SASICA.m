@@ -51,6 +51,12 @@
 %              Options: noplot: just compute and store result in EEG. Do
 %                           not make any plots.
 %
+% If you use this program in your research, please cite the following
+% article: 
+%   Chaumon M, Bishop DV, Busch NA. A Practical Guide to the Selection of
+%   Independent Components of the Electroencephalogram for Artifact
+%   Correction. Journal of neuroscience methods. 2015  
+%
 %   SASICA is a software that helps select independent components of
 %   the electroencephalogram based on various signal measures.
 %     Copyright (C) 2014  Maximilien Chaumon
