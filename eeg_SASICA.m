@@ -93,6 +93,12 @@ PLOTPERFIG = 35;
 def = SASICA('getdefs');
 
 cfg = setdef(cfg,def);
+v = regexp(version,'^\d+\.\d+','match');
+if num2str(v{1}) >= 8.4
+    mkersize = 25;
+else
+    mkersize = 20;
+end
 
 if isempty(EEG.icawinv)
     errordlg('No ica weights in the current EEG dataset! Compute ICA on your data first.')
@@ -186,7 +192,7 @@ if cfg.autocorr.enable
         toplot(toplot > dropautocorr) = NaN;
         plot(toplot,'o','color',rejfields{1,3})
         for i = 1:numel(autocorr)
-            h = scatter(i,autocorr(i),20,'k','filled');
+            h = scatter(i,autocorr(i),mkersize,'k','filled');
             cb = sprintf('eeg_SASICA(EEG, ''pop_prop( %s, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', inputname(1), i, i);
             set(h,'buttondownfcn',cb);
         end
@@ -230,7 +236,7 @@ if cfg.focalcomp.enable
         ylabel('Standardized weights')
         title('Components with focal activity')
         for i = 1:numel(mywt(1,:))
-            h = scatter(i,mywt(1,i),20,'k','filled');
+            h = scatter(i,mywt(1,i),mkersize,'k','filled');
             cb = sprintf('eeg_SASICA(EEG, ''pop_prop( %s, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', inputname(1), i, i);
             set(h,'buttondownfcn',cb);
         end
@@ -262,9 +268,9 @@ if cfg.trialfoc.enable
         subplot(2,3,isubplot);cla;isubplot = isubplot+1;
         if EEG.trials > 1
             set(gca,'fontsize',FontSize)
-            hold on
             toplot = myact(:,:,1);
             plot(toplot,'k','linestyle','none')
+            hold on
             toplot(toplot < focaltrialout) = NaN;
             plot(1:ncomp,toplot,'o','color',rejfields{3,3});
             xlim([0 ncomp+1])
@@ -274,7 +280,7 @@ if cfg.trialfoc.enable
             ylabel('Standardized peak trial activity')
             plot(xl(2)-diff(xl)/20,yl(2)-diff(yl)/20,'marker','.','color',rejfields{3,3},'markersize',40)
             for i = 1:numel(myact(:,:,1))
-                h = scatter(i,myact(i),20,'k','filled');
+                h = scatter(i,myact(i),mkersize,'k','filled');
                 cb = sprintf('eeg_SASICA(EEG, ''pop_prop( %s, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', inputname(1), i, i);
                 set(h,'buttondownfcn',cb);
             end
@@ -323,7 +329,7 @@ if cfg.SNR.enable
         plot(toplot,'o','color',rejfields{4,3})
         plot(xl(2)-diff(xl)/20,yl(2)-diff(yl)/20,'marker','.','color',rejfields{4,3},'markersize',40)
         for i = 1:numel(SNR)
-            h = scatter(i,SNR(i),20,'k','filled');
+            h = scatter(i,SNR(i),mkersize,'k','filled');
             cb = sprintf('eeg_SASICA(EEG, ''pop_prop( %s, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', inputname(1), i, i);
             set(h,'buttondownfcn',cb);
         end
@@ -363,7 +369,7 @@ if cfg.resvar.enable
         plot(toplot,'o','color',rejfields{5,3})
         plot(xl(2)-diff(xl)/20,yl(2)-diff(yl)/20,'marker','.','color',rejfields{5,3},'markersize',40)
         for i = 1:numel(resvar)
-            h = scatter(i,resvar(i),20,'k','filled');
+            h = scatter(i,resvar(i),mkersize,'k','filled');
             cb = sprintf('eeg_SASICA(EEG, ''pop_prop( %s, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', inputname(1), i, i);
             set(h,'buttondownfcn',cb);
         end
@@ -461,8 +467,8 @@ if cfg.EOGcorr.enable
         plot(xl(2)-diff(xl)/20,yl(2)-diff(yl)/20,'marker','.','color',rejfields{6,3},'markersize',40)
         legend(legstr,'fontsize',10, 'location', 'best');
         for i = 1:numel(cH)
-            h(1) = scatter(i,cH(i),20,cols(1,:),'filled');
-            h(2) = scatter(i,cV(i),20,cols(2,:),'filled');
+            h(1) = scatter(i,cH(i),mkersize,cols(1,:),'filled');
+            h(2) = scatter(i,cV(i),mkersize,cols(2,:),'filled');
             cb = sprintf('eeg_SASICA(EEG, ''pop_prop( %s, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', inputname(1), i, i);
             set(h,'buttondownfcn',cb);
         end
@@ -543,7 +549,7 @@ if cfg.chancorr.enable
         legend(hplotcorr,legstr,'fontsize',10, 'location', 'best');
         for ichan = 1:size(c,1)
             for i = 1:size(c,2)
-                h = scatter(i,c(ichan,i),20,cols(rem(icol+ichan-1,size(cols,1))+1,:),'filled');
+                h = scatter(i,c(ichan,i),mkersize,cols(rem(icol+ichan-1,size(cols,1))+1,:),'filled');
                 cb = sprintf('eeg_SASICA(EEG, ''pop_prop( %s, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', inputname(1), i, i);
                 set(h,'buttondownfcn',cb);
             end
