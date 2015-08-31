@@ -909,7 +909,7 @@ end;
 
 % plotting spectrum
 % -----------------
-if ~exist('winhandle') || isempty(winhandle) || isnan(winhandle)
+if ~exist('winhandle') || isempty(winhandle) || ~ishandle(winhandle) || isnan(winhandle)
     winhandle = NaN;
     p(2).pack('v',{.3 [] })
 else
