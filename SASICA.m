@@ -608,7 +608,12 @@ for i_f = 1:numel(fedits)
 end
 cfg.opts.noplot = get(handles.checkNoPlot,'Value');
 
-[EEG cfg] = eeg_SASICA(EEG,cfg);
+try
+    [EEG cfg] = eeg_SASICA(EEG,cfg);
+catch ME
+    disp('ERROR. Please send the entire error message below to max.chaumon@gmail.com. Thanks for your help!
+    rethrow(ME)
+end
 setpref('SASICA','cfg',cfg);
 
 com = ['[EEG] = SASICA(EEG,' vararg2str(struct2vararg(cfg)) ');'];
