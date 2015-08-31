@@ -607,7 +607,7 @@ for i_f = 1:numel(fedits)
     end
 end
 cfg.opts.noplot = get(handles.checkNoPlot,'Value');
-
+cfg.opts.nocompute = get(handles.checkReplot,'Value');
 try
     [EEG, cfg] = eeg_SASICA(EEG,cfg);
 catch ME
@@ -1030,6 +1030,7 @@ def.MARA.enable = false;
 
 def.opts.FontSize = 14;
 def.opts.noplot = 0;
+def.opts.nocompute = 0;
 
 
 
@@ -1138,3 +1139,17 @@ function checkNoPlot_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 % Hint: get(hObject,'Value') returns toggle state of checkNoPlot
+
+
+% --- Executes on button press in checkReplot.
+function checkReplot_Callback(hObject, eventdata, handles)
+% hObject    handle to checkReplot (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of checkReplot
+if get(hObject,'Value')
+    set(handles.push_ok,'String','Replot')
+else
+    set(handles.push_ok,'String','Compute')
+end
