@@ -609,9 +609,9 @@ end
 cfg.opts.noplot = get(handles.checkNoPlot,'Value');
 
 try
-    [EEG cfg] = eeg_SASICA(EEG,cfg);
+    [EEG, cfg] = eeg_SASICA(EEG,cfg);
 catch ME
-    disp('ERROR. Please send the entire error message below to max.chaumon@gmail.com. Thanks for your help!
+    disp('ERROR. Please send the entire error message below to max.chaumon@gmail.com. Thanks for your help!');
     rethrow(ME)
 end
 setpref('SASICA','cfg',cfg);
