@@ -611,6 +611,7 @@ cfg.opts.nocompute = get(handles.checkReplot,'Value');
 try
     [EEG, cfg] = eeg_SASICA(EEG,cfg);
 catch ME
+    textprogressbar
     disp('ERROR. Please send the entire error message below to max.chaumon@gmail.com. Thanks for your help!');
     rethrow(ME)
 end

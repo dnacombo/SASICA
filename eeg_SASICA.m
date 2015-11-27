@@ -691,13 +691,13 @@ EEG.reject.gcompreject = sum(EEG.reject.gcompreject) >= 1;
 %% plotting
 try
     delete(findobj('-regexp','name','pop_selectcomps'))
+    drawnow
 end
 if any(~noplot)
     if ~isempty([EEG.chanlocs.radius])% assume we have sensor locations...
         clear hfig
         delete(findobj('tag','waitcomp'))
-        hbar = waitbar(0,'Drawing topos...');
-        set(hbar,'tag','waitcomp'); drawnow
+        textprogressbar('Drawing topos...');
         for ifig = 1:ceil((ncomp)/PLOTPERFIG)
             cmps = [1+(ifig-1)*PLOTPERFIG:min([ncomp,ifig*PLOTPERFIG])];
             eeg_SASICA(EEG,['pop_selectcomps(EEG, [' num2str(cmps) '],' num2str(ncomp) ');']);
@@ -726,9 +726,7 @@ if any(~noplot)
         
         % create markers next to each topoplot showing which threshold has been
         % passed.
-        waitbar(0,hbar,'finishing...')
         for i_comp = 1:ncomp
-            waitbar(i_comp/ncomp,hbar);
             if EEG.reject.gcompreject(i_comp)
                 %                 axes(ax(i_comp))
                 f = get(ax(i_comp),'parent');
@@ -750,6 +748,7 @@ if any(~noplot)
         try
             eeg_SASICA(EEG,['pop_selectcomps(EEG, [' num2str(ncomp+1) ']);']);
         end
+        textprogressbar;
         hlastfig = gcf;
         set(hlastfig,'name',[get(hlastfig,'name') ' -- SASICA']);
         lastax = findobj(hlastfig,'type','Axes');
@@ -771,7 +770,6 @@ if any(~noplot)
             setctxt(hfig(i),EEG,cfg);
         end
         figure(hlastfig);
-        close(hbar);
     else
         disp('No channel locations. I''m not plotting.');
     end
@@ -1326,7 +1324,7 @@ if nargin < 2
     end;
     
 end;
-fprintf('Drawing figure...\n');
+% fprintf('Drawing figure...\n');
 currentfigtag = ['selcomp' num2str(rand)]; % generate a random figure tag
 
 if length(compnum) > PLOTPERFIG
@@ -1375,7 +1373,7 @@ end;
 % figure rows and columns
 % -----------------------
 if EEG.nbchan > 64
-    disp('More than 64 electrodes: electrode locations not shown');
+%     disp('More than 64 electrodes: electrode locations not shown');
     plotelec = 0;
 else
     plotelec = 1;
@@ -1385,7 +1383,7 @@ for ri = compnum
     if ri > numel(EEG.icachansind)
         error('don''t panic')
     end
-    waitbar(ri/comptot,findobj('tag','waitcomp'))
+    textprogressbar(ri/comptot*100);
     if exist('fig')
         button = findobj('parent', fig, 'tag', ['comp' num2str(ri)]);
         if isempty(button)
@@ -3463,3 +3461,79 @@ end
 
 
 
+function textprogressbar(c)
+% This function creates a text progress bar. It should be called with a 
+% STRING argument to initialize and terminate. Otherwise the number correspoding 
+% to progress in % should be supplied.
+% INPUTS:   C   Either: Text string to initialize or terminate 
+%                       Percentage number to show progress 
+% OUTPUTS:  N/A
+% Example:  Please refer to demo_textprogressbar.m
+
+% Author: Paul Proteus (e-mail: proteus.paul (at) yahoo (dot) com)
+% Version: 1.0
+% Changes tracker:  29.06.2010  - First version
+
+% Inspired by: http://blogs.mathworks.com/loren/2007/08/01/monitoring-progress-of-a-calculation/
+
+%% Initialization
+persistent strCR prevc strCRtitle;           %   Carriage return pesistent variable
+
+% Vizualization parameters
+strPercentageLength = 10;   %   Length of percentage string (must be >5)
+strDotsMaximum      = 10;   %   The total number of dots in a progress bar
+
+%% Main 
+if nargin == 0
+    % Progress bar  - force termination/initialization
+    fprintf('\n');
+    strCR = [];
+    strCRtitle = [];
+    prevc = [];
+elseif ischar(c)
+    % Progress bar - set/reset title
+    if not(isempty(strCR)) && all(strCR ~= -1)
+        fprintf(strCR);
+    end
+    if not(isempty(strCRtitle))
+        fprintf(strCRtitle);
+    end
+    % add trailing space if not one already
+    if isempty(regexp(c,'\s$', 'once'))
+        c = [c ' '];
+    end
+    fprintf('%s',c);
+    strCR = -1;strCRtitle = repmat('\b',1,numel(c));
+elseif isnumeric(c)
+    % Progress bar - normal progress
+    if isempty(prevc)
+        prevc = 0;
+    end
+    c = floor(c);
+    if c == prevc
+        return
+    else
+        prevc = c;
+    end
+    percentageOut = [num2str(c) '%%'];
+    percentageOut = [percentageOut repmat(' ',1,strPercentageLength-length(percentageOut)-1)];
+    nDots = floor(c/100*strDotsMaximum);
+    dotOut = ['[' repmat('.',1,nDots) repmat(' ',1,strDotsMaximum-nDots) ']'];
+    strOut = [percentageOut dotOut];
+    
+    % Print it on the screen
+    if strCR == -1,
+        % Don't do carriage return during first run
+        fprintf(strOut);
+    else
+        % Do it during all the other runs
+        fprintf([strCR strOut]);
+    end
+    
+    % Update carriage return
+    strCR = repmat('\b',1,length(strOut)-1);
+    
+else
+    % Any other unexpected input
+    error('Unsupported argument type');
+end
