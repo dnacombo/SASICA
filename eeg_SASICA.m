@@ -1,4 +1,4 @@
-% EEG = eeg_SASICA(EEG,cfg)
+% [EEG, cfg] = eeg_SASICA(EEG,cfg)
 %
 % Suggest components to reject from an EEG dataset with ICA decomposition.
 %
@@ -80,13 +80,13 @@ function [EEG, cfg] = eeg_SASICA(EEG,cfg)
 if nargin < 1
     error('Need at least one input argument')
 end
+if ~exist('cfg','var')
+    cfg = struct;
+end
 % deal with calling pop_prop_ADJ or pop_prop_FST here
 if ischar(cfg) && strncmp(cfg,'pop_',4)
     eval(cfg);
     return
-end
-if ~exist('cfg','var')
-    cfg = struct;
 end
 %
 PLOTPERFIG = 35;
