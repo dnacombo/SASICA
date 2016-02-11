@@ -1,6 +1,6 @@
 function vers = eegplugin_SASICA(fig,try_strings,catch_strings)
 
-vers = 'SASICA_1.0';
+vers = 'SASICA_1.1';
 
 toolsmenu = findobj(fig,'Tag','tools');
 abovemenupos = get(findobj(toolsmenu,'Label','Remove components'),'position');
