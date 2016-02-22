@@ -697,6 +697,7 @@ if any(~noplot)
     if ~isempty([EEG.chanlocs.radius])% assume we have sensor locations...
         clear hfig
         delete(findobj('tag','waitcomp'))
+        textprogressbar;
         textprogressbar('Drawing topos...');
         for ifig = 1:ceil((ncomp)/PLOTPERFIG)
             cmps = [1+(ifig-1)*PLOTPERFIG:min([ncomp,ifig*PLOTPERFIG])];
