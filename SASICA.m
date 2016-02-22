@@ -3,7 +3,7 @@
 % Usage:
 %   >> [EEG com] = SASICA();
 %       Raises a GUI
-%       Pressing OK uses the selected methods to detect artifactual
+%       Pressing "Compute" uses the selected methods to detect artifactual
 %       components.
 %       Available methods are:
 %              Autocorrelation: detects noisy components with weak
