@@ -992,6 +992,9 @@ def = getdefs;
 setpref('SASICA','cfg',def);
 SASICA(def)
 
+function resetprefs()
+resetprefs_Callback()
+
 function def = getdefs
 
 def.autocorr.enable = true;
