@@ -1374,7 +1374,7 @@ end;
 % figure rows and columns
 % -----------------------
 if EEG.nbchan > 64
-%     disp('More than 64 electrodes: electrode locations not shown');
+    %     disp('More than 64 electrodes: electrode locations not shown');
     plotelec = 0;
 else
     plotelec = 1;
@@ -3463,11 +3463,11 @@ end
 
 
 function textprogressbar(c)
-% This function creates a text progress bar. It should be called with a 
-% STRING argument to initialize and terminate. Otherwise the number correspoding 
+% This function creates a text progress bar. It should be called with a
+% STRING argument to initialize and terminate. Otherwise the number correspoding
 % to progress in % should be supplied.
-% INPUTS:   C   Either: Text string to initialize or terminate 
-%                       Percentage number to show progress 
+% INPUTS:   C   Either: Text string to initialize or terminate
+%                       Percentage number to show progress
 % OUTPUTS:  N/A
 % Example:  Please refer to demo_textprogressbar.m
 
@@ -3484,7 +3484,7 @@ persistent strCR prevc strCRtitle;           %   Carriage return pesistent varia
 strPercentageLength = 10;   %   Length of percentage string (must be >5)
 strDotsMaximum      = 10;   %   The total number of dots in a progress bar
 
-%% Main 
+%% Main
 if nargin == 0
     % Progress bar  - force termination/initialization
     fprintf('\n');
@@ -3538,3 +3538,19 @@ else
     % Any other unexpected input
     error('Unsupported argument type');
 end
+
+
+% NANMEAN provides a replacement for MATLAB's nanmean.
+%
+% For usage see MEAN.
+
+function y = nanmean(x, dim)
+
+if nargin<2
+  N = sum(~isnan(x));
+  y = nansum(x) ./ N;
+else
+  N = sum(~isnan(x), dim);
+  y = nansum(x, dim) ./ N;
+end
+
