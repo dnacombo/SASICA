@@ -1902,7 +1902,7 @@ while not(isempty(t))
     if isempty(idx)
         idx = 1:min(n,numel(t));
     end
-    tw(end+1,:) = char(padarray(double(t(idx)),[0 n-numel(idx)],32,'post'));
+    tw(end+1,:) =  [ t( idx ) repmat( char( 32 ) , [1 n - numel( idx ) ] ) ];
     t(idx)= [];
     t = strtrim(t);
 end
