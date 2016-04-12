@@ -2191,7 +2191,7 @@ if ~isempty(nopos_channels)
     disp(' ');
 end;
 
-pos_channels=setdiff(1:length(EEG.chanlocs),nopos_channels);
+pos_channels=setdiff(EEG.icachansind,nopos_channels); %pos_channels=setdiff(1:length(EEG.chanlocs),nopos_channels); NF edit
 
 %% Feature extraction
 
@@ -3180,8 +3180,8 @@ function [artcomps, info] = MARA(EEG)
 %%%%%%%%%%%%%%%%%%%%
 % extract channel labels
 clab = {};
-for i=1:length(EEG.chanlocs)
-    clab{i} = EEG.chanlocs(i).labels;
+for i=1:length(EEG.icachansind) %i=1:length(EEG.chanlocs), NF edit
+    clab{i} = EEG.chanlocs(EEG.icachansind(i)).labels; %EEG.chanlocs(i).labels; NF edit
 end
 
 % cut to channel labels common with training data
