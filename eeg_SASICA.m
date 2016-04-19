@@ -489,7 +489,7 @@ if cfg.EOGcorr.enable
         icol = 2;
         hold all
         xlim([0 ncomp+1]);
-        xl = xlim;yl = ylim;
+        xl = xlim;yl = ylim;set(gca,'ylimMode','manual');
         hline(corthreshV,'color',cols(1,:));
         hline(corthreshH,'color',cols(2,:));
         
@@ -506,7 +506,9 @@ if cfg.EOGcorr.enable
         toplot(toplot < corthreshH) = NaN;
         plot(1:ncomp,toplot,'o','color',rejfields{6,3})
         plot(xl(2)-diff(xl)/20,yl(2)-diff(yl)/20,'marker','.','color',rejfields{6,3},'markersize',40)
-        legend(hplotcorr(legidx),legstr,'fontsize',10, 'location', 'best');
+        if not(sum(legidx) == 0)
+            legend(hplotcorr(legidx),legstr,'fontsize',10, 'location', 'best');
+        end
         for i = 1:numel(cH)
             h(1) = scatter(i,cV(i),mkersize,cols(1,:),'filled');
             h(2) = scatter(i,cH(i),mkersize,cols(2,:),'filled');
@@ -575,7 +577,7 @@ if cfg.chancorr.enable
             [hplotcorr(end+1)] = plot([c(ichan,:)]','.','linestyle','none','color',cols(rem(icol+ichan-1,size(cols,1))+1,:));
         end
         xlim([0 ncomp+1]);
-        xl = xlim;yl = ylim;
+        xl = xlim;yl = ylim;set(gca,'ylimMode','manual');
         hline(corthresh,'r');
         title(['Correlation with channels'])
         if cfg.EOGcorr.enable
@@ -593,7 +595,9 @@ if cfg.chancorr.enable
         end
         plot(1:ncomp,toplot,'o','color',rejfields{6,3})
         plot(xl(2)-diff(xl)/20,yl(2)-diff(yl)/20,'marker','.','color',rejfields{6,3},'markersize',40)
-        legend(hplotcorr(legidx),legstr,'fontsize',10, 'location', 'best');
+        if not(sum(legidx) == 0)
+            legend(hplotcorr(legidx),legstr,'fontsize',10, 'location', 'best');
+        end
         for ichan = 1:size(c,1)
             for i = 1:size(c,2)
                 h = scatter(i,c(ichan,i),mkersize,cols(rem(icol+ichan-1,size(cols,1))+1,:),'filled');
