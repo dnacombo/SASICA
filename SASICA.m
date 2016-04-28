@@ -612,6 +612,8 @@ try
     [EEG, cfg] = eeg_SASICA(EEG,cfg);
 catch ME
     disp('ERROR. Please send the entire error message below to max.chaumon@gmail.com. Thanks for your help!');
+    disp(['This is MATLAB ' version])
+    disp(['Running on ' computer])
     rethrow(ME)
 end
 setpref('SASICA','cfg',cfg);
