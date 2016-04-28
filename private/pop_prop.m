@@ -425,3 +425,104 @@ end;
 
 return;
 
+function era_limits=get_era_limits(era)
+%function era_limits=get_era_limits(era)
+%
+% Returns the minimum and maximum value of an event-related
+% activation/potential waveform (after rounding according to the order of
+% magnitude of the ERA/ERP)
+%
+% Inputs:
+% era - [vector] Event related activation or potential
+%
+% Output:
+% era_limits - [min max] minimum and maximum value of an event-related
+% activation/potential waveform (after rounding according to the order of
+% magnitude of the ERA/ERP)
+
+mn=min(era);
+mx=max(era);
+mn=orderofmag(mn)*round(mn/orderofmag(mn));
+mx=orderofmag(mx)*round(mx/orderofmag(mx));
+era_limits=[mn mx];
+
+
+function [lengths]  =  min_z(list_properties, rejection_options)
+if (~exist('rejection_options', 'var'))
+    rejection_options.measure = ones(1, size(list_properties, 2));
+    rejection_options.z = 3*ones(1, size(list_properties, 2));
+end
+
+rejection_options.measure = logical(rejection_options.measure);
+zs = list_properties - repmat(mean(list_properties, 1), size(list_properties, 1), 1);
+zs = zs./repmat(std(zs, [], 1), size(list_properties, 1), 1);
+zs(isnan(zs)) = 0;
+all_l  =  abs(zs) > repmat(rejection_options.z, size(list_properties, 1), 1);
+lengths  =  any(all_l(:, rejection_options.measure), 2);
+
+function out = nan_mean(in)
+
+nans = find(isnan(in));
+in(nans) = 0;
+sums = sum(in);
+nonnans = ones(size(in));
+nonnans(nans) = 0;
+nonnans = sum(nonnans);
+nononnans = find(nonnans==0);
+nonnans(nononnans) = 1;
+out = sum(in)./nonnans;
+out(nononnans) = NaN;
+
+
+function ord=orderofmag(val)
+%function ord=orderofmag(val)
+%
+% Returns the order of magnitude of the value of 'val' in multiples of 10
+% (e.g., 10^-1, 10^0, 10^1, 10^2, etc ...)
+% used for computing erpimage trial axis tick labels as an alternative for
+% plotting sorting variable
+
+val=abs(val);
+if val>=1
+    ord=1;
+    val=floor(val/10);
+    while val>=1,
+        ord=ord*10;
+        val=floor(val/10);
+    end
+    return;
+else
+    ord=1/10;
+    val=val*10;
+    while val<1,
+        ord=ord/10;
+        val=val*10;
+    end
+    return;
+end
+
+
+function tw = strwrap(t,n)
+
+% tw = strwrap(t,n)
+%
+% wrap text array t at n characters taking non alphanumeric characters as
+% breaking characters (i.e. not cutting words strangely).
+
+t = deblank(t(:)');
+seps = '[\s-]';
+tw = '';
+while not(isempty(t))
+    breaks = regexp(t,seps);
+    breaks(end+1) = numel(t);
+    idx = 1:min(n,breaks(find(breaks < n, 1,'last')));
+    if isempty(idx)
+        idx = 1:min(n,numel(t));
+    end
+    tw(end+1,:) =  [ t( idx ) repmat( char( 32 ) , [1 n - numel( idx ) ] ) ];
+    t(idx)= [];
+    t = strtrim(t);
+end
+
+
+

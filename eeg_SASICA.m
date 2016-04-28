@@ -788,3 +788,85 @@ if nargout == 0
 end
 
 
+function [lengths]  =  min_z(list_properties, rejection_options)
+if (~exist('rejection_options', 'var'))
+    rejection_options.measure = ones(1, size(list_properties, 2));
+    rejection_options.z = 3*ones(1, size(list_properties, 2));
+end
+
+rejection_options.measure = logical(rejection_options.measure);
+zs = list_properties - repmat(mean(list_properties, 1), size(list_properties, 1), 1);
+zs = zs./repmat(std(zs, [], 1), size(list_properties, 1), 1);
+zs(isnan(zs)) = 0;
+all_l  =  abs(zs) > repmat(rejection_options.z, size(list_properties, 1), 1);
+lengths  =  any(all_l(:, rejection_options.measure), 2);
+
+function thresh = readauto(thresh,dat,comp)
+% if thresh starts with 'auto'
+% compute auto threshold as mean(dat) +/- N std(dat)
+% with N read in the string thresh = 'auto N'
+% if not, use thresh as a value
+if isstr(thresh) && strncmp(thresh,'auto',4)
+    if numel(thresh) > 4
+        threshsigma = str2num(thresh(5:end));
+    else
+        threshsigma = 2;
+    end
+    thresh = eval(['mean(dat,2)' comp 'threshsigma * std(dat,[],2)']);
+end
+
+
+
+function setctxt(hfig,EEG,cfg)
+COLREJ = '[1 0.6 0.6]';
+COLACC = '[0.75 1 0.75]';
+buttons = findobj(hfig,'-regexp','tag','^comp\d{1,3}$');
+buttonnums = regexp(get(buttons,'tag'),'comp(\d{1,3})','tokens');
+if numel(buttonnums)>1
+    buttonnums = cellfun(@(x)(str2num(x{1}{1})),buttonnums);
+else
+    buttonnums = str2num(buttonnums{1}{1});
+end
+for i = 1:numel(buttonnums)
+    hcmenu = uicontextmenu;
+
+    if ~isempty(EEG.reject.gcompreject)
+        status = EEG.reject.gcompreject(buttonnums(i));
+    else
+        status = 0;
+    end;
+
+    hcb1 = ['EEG.reject.gcompreject(' num2str(buttonnums(i)) ') = ~EEG.reject.gcompreject(' num2str(buttonnums(i)) ');'...
+        'set(gco,''backgroundcolor'',fastif(EEG.reject.gcompreject(' num2str(buttonnums(i)) '), ' COLREJ ',' COLACC '));'...
+        'set(findobj(''tag'',''ctxt' num2str(buttonnums(i)) '''), ''Label'',fastif(EEG.reject.gcompreject(' num2str(buttonnums(i)) '),''ACCEPT'',''REJECT''));' ];
+    uimenu(hcmenu, 'Label', fastif(status,'ACCEPT','REJECT'), 'Callback', hcb1,'tag',['ctxt' num2str(buttonnums(i))]);
+
+    mycb = strrep(get(buttons(i),'Callback'),'''','''''');
+    mycb = regexprep(mycb,'pop_prop','eeg_SASICA(EEG,''pop_prop');
+    mycb = [mycb ''');'];
+    set(buttons(i),'CallBack',mycb)
+    set(buttons(i),'uicontextmenu',hcmenu)
+end
+
+function s = setdef(s,d)
+% s = setdef(s,d)
+% Merges the two structures s and d recursively.
+% Adding the default field values from d into s when not present or empty.
+
+if isstruct(s) && not(isempty(s))
+    fields = fieldnames(d);
+    for i_f = 1:numel(fields)
+        if isfield(s,fields{i_f})
+            s.(fields{i_f}) = setdef(s.(fields{i_f}),d.(fields{i_f}));
+        else
+            s.(fields{i_f}) = d.(fields{i_f});
+        end
+    end
+elseif not(isempty(s))
+    s = s;
+elseif isempty(s);
+    s = d;
+end
+
+function res = existnotempty(s,f)
+res = isfield(s,f) && not(isempty(s.(f)));
