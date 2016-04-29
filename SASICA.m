@@ -611,7 +611,10 @@ cfg.opts.nocompute = get(handles.checkReplot,'Value');
 try
     [EEG, cfg] = eeg_SASICA(EEG,cfg);
 catch ME
+    disp('================================');
+    disp('================================');
     disp('ERROR. Please send the entire error message below to max.chaumon@gmail.com. Thanks for your help!');
+    disp('================================');
     disp(['This is MATLAB ' version])
     disp(['Running on ' computer])
     rethrow(ME)
