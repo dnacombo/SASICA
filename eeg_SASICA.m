@@ -535,15 +535,15 @@ if cfg.chancorr.enable
     disp('Correlation with other channels.')
     %% Correlation with other channels
     struct2ws(cfg.chancorr);
+    try
+        [chan cellchannames channames] = chnb(channames);
+    end
     if ~nocompute
         if ~cfg.EOGcorr.enable
             rejH = false(1,ncomp);
             rejV = false(1,ncomp);
         end
         if ~isempty(channames)
-            try
-                [chan cellchannames channames] = chnb(channames);
-            end
             chanEEG = EEG.data(chan,:)';
             ICs = icaacts(:,:)';
             c  = abs(corr(ICs,chanEEG))';
@@ -559,6 +559,7 @@ if cfg.chancorr.enable
             noplot(6) = 1;
             disp('Could not find the channels to compute correlation.');
             c = NaN(1,ncomp);
+            corthresh = mean(readauto(corthresh,c,'+'));
             EEG.reject.SASICA.([strrep(rejfields{6,1},'rej','') 'chans']) = c;
             EEG.reject.SASICA.([strrep(rejfields{6,1},'rej','thresh') 'chans']) = corthresh;
             rej = false(1,ncomp);
@@ -596,8 +597,12 @@ if cfg.chancorr.enable
         else
             legstr = {cellchannames{:}};
         end
-        legidx = cellfun(@(x)~all(isnan(x)),get(hplotcorr,'ydata'));
+        if not(isempty(hplotcorr))
+            legidx = cellfun(@(x)~all(isnan(x)),get(hplotcorr,'ydata'));
+        else legidx = [];
+        end
         legstr = legstr(legidx);
+        
         ylabel('Correlation coef (r)');
         xlabel('Components');
         toplot = c;
