@@ -83,7 +83,7 @@ end
 if ~exist('cfg','var')
     cfg = struct;
 end
-
+% deal with calling pop_prop_ADJ or pop_prop_FST here
 if ischar(cfg) && strncmp(cfg,'pop_',4)
     try
         eval(cfg);
@@ -766,7 +766,7 @@ if any(~noplot)
         end
         set(hfig,'visible','on');
         try
-            eeg_SASICA(EEG,['pop_selectcomps(EEG, [' num2str(ncomp+1) ']);']);
+            pop_selectcomps(EEG, [ncomp+1]);
         end
         textprogressbar;
         hlastfig = gcf;
