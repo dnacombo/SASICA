@@ -778,7 +778,7 @@ if any(~noplot)
         set(hlastfig,'name',[get(hlastfig,'name') ' -- SASICA']);
         lastax = findobj(hlastfig,'type','Axes');
         set(lastax,'visible','off');
-        axes(lastax);
+        axes(lastax(end));
         hold on
         for irej = 1:numel(rejects)
             set(gca,'xlimmode','manual');
