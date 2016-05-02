@@ -83,9 +83,20 @@ end
 if ~exist('cfg','var')
     cfg = struct;
 end
-% deal with calling pop_prop_ADJ or pop_prop_FST here
+
 if ischar(cfg) && strncmp(cfg,'pop_',4)
-    eval(cfg);
+    try
+        eval(cfg);
+    catch ME
+        disp('================================');
+        disp('================================');
+        disp('ERROR. Please send the entire error message below to max.chaumon@gmail.com. Thanks for your help!');
+        disp('================================');
+        disp(['This is ' eegplugin_SASICA])
+        disp(['This is MATLAB ' version])
+        disp(['Running on ' computer])
+        rethrow(ME)
+    end
     return
 end
 %
