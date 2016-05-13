@@ -454,6 +454,10 @@ if cfg.EOGcorr.enable
             disp('no Horizontal EOG channels...');
             noH = 1;
         end
+        if noV && noH
+            errordlg({'No EOG channel names entered.' 'Please enter vertical and/or horizontal channel names' 'or disable "Correlation with EOG" measure and start over.'})
+            return
+        end
         ICs = icaacts(:,:)';
         if ~noV
             VEOG = VEOG(:);
