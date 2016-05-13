@@ -613,11 +613,12 @@ try
 catch ME
     disp('================================');
     disp('================================');
-    disp('ERROR. Please send the entire error message below to max.chaumon@gmail.com. Thanks for your help!');
+    disp('ERROR. Please send the entire error log below to max.chaumon@gmail.com. Thanks for your help!');
     disp('================================');
     disp(['This is ' eegplugin_SASICA])
     disp(['This is MATLAB ' version])
     disp(['Running on ' computer])
+    dispstruct(cfg)
     rethrow(ME)
 end
 setpref('SASICA','cfg',cfg);
@@ -627,6 +628,23 @@ assignin('base','EEG',EEG);
 assignin('base','LASTCOM',com);
 % close(handles.figure1);
 
+function dispstruct(S,space)
+if nargin == 1
+    space = 0;
+end
+f = fieldnames(S);
+for i_f = 1:numel(f)
+    if ~isstruct(S.(f{i_f}))
+        if isnumeric(S.(f{i_f}))
+            disp([repmat('  ',space), f{i_f} ': ', num2str(S.(f{i_f}))])
+        else
+            disp([repmat('  ',space), f{i_f} ': ', S.(f{i_f})])
+        end
+    else
+        disp([repmat('  ',space), f{i_f} ':'])
+        dispstruct(S.(f{i_f}),space+1)
+    end
+end
 
 function edit_trialfoc_focaltrialout_Callback(hObject, eventdata, handles)
 % hObject    handle to edit_trialfoc_focaltrialout (see GCBO)
