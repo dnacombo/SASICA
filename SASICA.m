@@ -153,9 +153,11 @@ handles.EEG = EEG;
 if numel(varargin) == 1 && isstruct(varargin{1})
     % assume we have only cfg as input
     cfg = varargin{1};
+    cfg = setdef(cfg,getpref('SASICA','cfg',getdefs));
 elseif numel(varargin) > 1 && ischar(varargin{1})
     % assume we have param, argument pairs
     cfg = vararg2struct(varargin,'_');
+    cfg = setdef(cfg,getpref('SASICA','cfg',getdefs));
     % run eeg_SASICA straight
     EEG = eeg_SASICA(EEG,cfg);
     setpref('SASICA','cfg',cfg);
@@ -608,6 +610,8 @@ for i_f = 1:numel(fedits)
 end
 cfg.opts.noplot = get(handles.checkNoPlot,'Value');
 cfg.opts.nocompute = get(handles.checkReplot,'Value');
+cfg = setdef(cfg,getpref('SASICA','cfg',getdefs));
+
 try
     [EEG, cfg] = eeg_SASICA(EEG,cfg);
 catch ME
