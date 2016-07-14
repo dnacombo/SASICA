@@ -83,7 +83,7 @@ end
 if ~exist('cfg','var')
     cfg = struct;
 end
-% deal with calling pop_prop_ADJ or pop_prop_FST here
+% deal with calling pop_prop here
 if ischar(cfg) && strncmp(cfg,'pop_',4)
     try
         eval(cfg);
@@ -455,7 +455,7 @@ if cfg.EOGcorr.enable
             noH = 1;
         end
         if noV && noH
-            errordlg({'No EOG channel names entered.' 'Please enter vertical and/or horizontal channel names' 'or disable "Correlation with EOG" measure and start over.'})
+            waitfor(errordlg({'No EOG channel names entered.' 'Please enter vertical and/or horizontal channel names' 'or disable "Correlation with EOG" measure and start over.'}))
             return
         end
         ICs = icaacts(:,:)';
@@ -665,8 +665,12 @@ if cfg.FASTER.enable
     %% FASTER
     struct2ws(cfg.FASTER);
     if ~nocompute
-        blinkchans = chnb(blinkchans);
-        listprops = component_properties(EEG,blinkchans);
+        blinkchanname = chnb(blinkchanname);
+        if isempty(blinkchanname)
+            waitfor(errordlg({'If you use the FASTER method,' 'it is highly recommended to provide a "blink channel".' 'The method is unreliable without it.' 'Please provide a blink channel or disable the "FASTER" method.'}))
+            return
+        end
+        listprops = component_properties(EEG,blinkchanname);
         FST.rej = min_z(listprops)' ~= 0;
         FST.listprops = listprops;
 

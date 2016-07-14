@@ -13,7 +13,7 @@ function [nb,channame,strnames] = chnb(channame, varargin)
 %   channameornb  - If a string or cell array of strings, it is assumed to
 %                   be (part of) the name of channels to search. Either a
 %                   string with space separated channel names, or a cell
-%                   array of strings.
+%                   array of strings. 
 %                   Note that regular expressions can be used to match
 %                   several channels. See regexp.
 %                   If only one channame pattern is given and the string
@@ -30,9 +30,14 @@ function [nb,channame,strnames] = chnb(channame, varargin)
 %   strnames      - Channel names, one line character array.
 error(nargchk(1,2,nargin));
 if nargin == 2
-    labels = varargin{1};
+    if isstruct(varargin{1}) && isfield(varargin{1},'setname')
+        % assume it's an EEG dataset
+        labels = {varargin{1}.chanlocs.labels};
+    else
+        labels = varargin{1};
+    end
 else
-
+    
     try
         EEG = evalin('caller','EEG');
     catch
@@ -49,7 +54,7 @@ else
     labels = {EEG.chanlocs.labels};
 end
 if iscell(channame) || ischar(channame)
-
+    
     if ischar(channame) || iscellstr(channame)
         if iscellstr(channame) && numel(channame) == 1 && isempty(channame{1})
             channame = '';
@@ -65,6 +70,8 @@ if iscell(channame) || ischar(channame)
         end
         if isempty(channame)
             nb = [];
+            channame = {};
+            strnames = '';
             return
         end
     end
@@ -76,7 +83,7 @@ if iscell(channame) || ischar(channame)
         cmd = 'exact';
     end
     nb = regexpcell(labels,channame,[cmd 'ignorecase']);
-
+    
 elseif isnumeric(channame)
     nb = channame;
     if nb > numel(labels)
@@ -88,4 +95,8 @@ strnames = sprintf('%s ',channame{:});
 if not(isempty(strnames))
     strnames(end) = [];
 end
-
+if nargout == 0
+    disp(channame)
+    disp(nb)
+    clear
+end
