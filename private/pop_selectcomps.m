@@ -91,7 +91,7 @@ end;
 % -----------------
 column =ceil(sqrt( length(compnum) ))+1;
 rows = ceil(length(compnum)/column);
-if ~exist('fig')
+if ~exist('fig','var')
     figure('name', [ 'Reject components by map - pop_selectcomps() (dataset: ' EEG.setname ')'], 'tag', currentfigtag, ...
         'numbertitle', 'off', 'color', BACKCOLOR,'visible','off');
     set(gcf,'MenuBar', 'none');
@@ -126,7 +126,7 @@ for ri = compnum
         error('don''t panic')
     end
     textprogressbar(ri/comptot*100);
-    if exist('fig')
+    if exist('fig','var')
         button = findobj('parent', fig, 'tag', ['comp' num2str(ri)]);
         if isempty(button)
             error( 'pop_selectcomps(): figure does not contain the component button');
@@ -171,7 +171,7 @@ end;
 
 % draw the bottom button
 % ----------------------
-if ~exist('fig')
+if ~exist('fig','var')
     hh = uicontrol(gcf, 'Style', 'pushbutton', 'string', 'Cancel', 'Units','Normalized', 'backgroundcolor', GUIBUTTONCOLOR, ...
         'Position',[-10 -10  15 sizewy*0.25].*s+q, 'callback', 'close(gcf); fprintf(''Operation cancelled\n'')' );
     hh = uicontrol(gcf, 'Style', 'pushbutton', 'string', 'Set threhsolds', 'Units','Normalized', 'backgroundcolor', GUIBUTTONCOLOR, ...
