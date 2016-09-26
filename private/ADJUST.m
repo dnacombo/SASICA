@@ -805,6 +805,7 @@ c=(log((k*prior1*sqrt(var2))/(prior2*sqrt(var1)))*(var2*var1))+(((((med2)^2)*var
 rad=(b^2)-(4*a*c);
 if rad<0
     disp('Negative Discriminant!');
+    [last,med1,med2,var1,var2,prior1,prior2] = rep2struct(NaN);
     return;
 end
 
