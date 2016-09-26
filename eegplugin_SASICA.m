@@ -1,6 +1,6 @@
 function vers = eegplugin_SASICA(fig,try_strings,catch_strings)
 
-vers = 'SASICA_1.3.2';
+vers = 'SASICA_1.3.3';
 
 if nargin == 0
     return
