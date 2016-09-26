@@ -28,7 +28,11 @@ function [nb,channame,strnames] = chnb(channame, varargin)
 %                   structure exists in the caller workspace.
 %   names         - Channel names, cell array of strings.
 %   strnames      - Channel names, one line character array.
-error(nargchk(1,2,nargin));
+if exist('narginchk','builtin')
+    narginchk(1,2)
+else
+    error(nargchk(1,2,nargin))
+end
 if nargin == 2
     if isstruct(varargin{1}) && isfield(varargin{1},'setname')
         % assume it's an EEG dataset

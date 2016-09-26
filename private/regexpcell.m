@@ -18,8 +18,11 @@ function idx = regexpcell(c,pat, cmds)
 % v1.1 Maximilien Chaumon 24/05/09 - added ignorecase
 % v2 Maximilien Chaumon 02/03/2010 changed input method.
 %       inv,ignorecase,exact,combine are replaced by cmds
-
-error(nargchk(2,3,nargin))
+if exist('narginchk','builtin')
+    narginchk(2,3)
+else
+    error(nargchk(2,3,nargin))
+end
 if not(iscellstr(c))
     error('input c must be a cell array of strings');
 end
