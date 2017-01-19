@@ -75,13 +75,17 @@
 %     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-function [EEG, cfg] = eeg_SASICA(EEG,cfg)
+function [EEG, cfg] = eeg_SASICA(EEG,varargin)
 
 if nargin < 1
     error('Need at least one input argument')
 end
-if ~exist('cfg','var')
+if numel(varargin) == 1
+    cfg = varargin{1};
+elseif numel(varargin) == 0
     cfg = struct;
+else
+    cfg = vararg2struct(varargin);
 end
 % deal with calling pop_prop here
 if ischar(cfg) && strncmp(cfg,'pop_',4)
