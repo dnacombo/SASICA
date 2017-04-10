@@ -817,14 +817,14 @@ resetprefs_Callback()
 
 function def = getdefs
 
-def.autocorr.enable = true;
+def.autocorr.enable = false;
 def.autocorr.dropautocorr = 'auto';
 def.autocorr.autocorrint = 20;% will compute autocorrelation with this many milliseconds lag
 
-def.focalcomp.enable = true;
+def.focalcomp.enable = false;
 def.focalcomp.focalICAout = 'auto';
 
-def.trialfoc.enable = true;
+def.trialfoc.enable = false;
 def.trialfoc.focaltrialout = 'auto';
 
 def.resvar.enable = false;
@@ -835,7 +835,7 @@ def.SNR.snrPOI = [0 Inf];% period of interest (signal)
 def.SNR.snrBL = [-Inf 0];% period of no interest (noise)
 def.SNR.snrcut = 1;% SNR below this threshold will be dropped
 
-def.EOGcorr.enable = true;
+def.EOGcorr.enable = false;
 def.EOGcorr.corthreshV = 'auto 4';% threshold correlation with vertical EOG
 def.EOGcorr.Veogchannames = [];% vertical channel(s)
 def.EOGcorr.corthreshH = 'auto 4';% threshold correlation with horizontal EOG
@@ -845,10 +845,10 @@ def.chancorr.enable = false;
 def.chancorr.corthresh = 'auto 4';% threshold correlation
 def.chancorr.channames = [];% channel(s)
 
-def.FASTER.enable = true;
+def.FASTER.enable = false;
 def.FASTER.blinkchanname = [];
 
-def.ADJUST.enable = true;
+def.ADJUST.enable = false;
 
 def.MARA.enable = false;
 
