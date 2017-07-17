@@ -918,8 +918,10 @@ handles = guidata(hObject);
 % inchan can be numeric or not
 if isempty(inchan)
     chname = '';
+elseif isnumeric(inchan)
+    [dum dum chname] = chnb(inchan,handles.EEG);
 elseif not(isempty(str2num(inchan)))
-    % if it's numeric
+    % if it's a string of numbers
     [dum dum chname] = chnb(str2num(inchan),handles.EEG);
 else
     [dum dum chname] = chnb(inchan,handles.EEG);
