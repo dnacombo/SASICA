@@ -178,7 +178,7 @@ disc=[];
 %% Check EEG channel position information
 nopos_channels=[];
 for el=1:length(EEG.chanlocs)
-    if(any(isempty(EEG.chanlocs(1,el).X)&isempty(EEG.chanlocs(1,el).Y)&isempty(EEG.chanlocs(1,el).Z)&isempty(EEG.chanlocs(1,el).theta)&isempty(EEG.chanlocs(1,el).radius)))
+    if(any(isempty(EEG.chanlocs(el).X)&isempty(EEG.chanlocs(el).Y)&isempty(EEG.chanlocs(el).Z)&isempty(EEG.chanlocs(el).theta)&isempty(EEG.chanlocs(el).radius)))
         nopos_channels=[nopos_channels el];
     end;
 end
@@ -199,21 +199,21 @@ disp('Features Extraction:')
 
 disp('GDSF - General Discontinuity Spatial Feature...')
 
-GDSF = compute_GD_feat(topografie,EEG.chanlocs(1,pos_channels),size(EEG.icawinv,2));
+GDSF = compute_GD_feat(topografie,EEG.chanlocs(pos_channels),size(EEG.icawinv,2));
 
 
 %SED - Spatial Eye Difference
 
 disp('SED - Spatial Eye Difference...')
 
-[SED,medie_left,medie_right]=computeSED_NOnorm(topografie,EEG.chanlocs(1,pos_channels),size(EEG.icawinv,2));
+[SED,medie_left,medie_right]=computeSED_NOnorm(topografie,EEG.chanlocs(pos_channels),size(EEG.icawinv,2));
 
 
 %SAD - Spatial Average Difference
 
 disp('SAD - Spatial Average Difference...')
 
-[SAD,var_front,var_back,mean_front,mean_back]=computeSAD(topografie,EEG.chanlocs(1,pos_channels),size(EEG.icawinv,2));
+[SAD,var_front,var_back,mean_front,mean_back]=computeSAD(topografie,EEG.chanlocs(pos_channels),size(EEG.icawinv,2));
 
 
 %SVD - Spatial Variance Difference between front zone and back zone
@@ -467,7 +467,7 @@ dimleft=0; %number of LE electrodes
 index1=zeros(1,nchannels); %indexes of LE electrodes
 
 for k=1:nchannels
-    if (-61<chanlocs(1,k).theta) && (chanlocs(1,k).theta<-35) && (chanlocs(1,k).radius>0.30) %electrodes are in LE
+    if (-61<chanlocs(k).theta) && (chanlocs(k).theta<-35) && (chanlocs(k).radius>0.30) %electrodes are in LE
         dimleft=dimleft+1; %count electrodes
         index1(1,dimleft)=k;
     end
@@ -477,7 +477,7 @@ end
 dimright=0; %number of RE electrodes
 index2=zeros(1,nchannels); %indexes of RE electrodes
 for g=1:nchannels
-    if (34<chanlocs(1,g).theta) && (chanlocs(1,g).theta<61) && (chanlocs(1,g).radius>0.30) %electrodes are in RE
+    if (34<chanlocs(g).theta) && (chanlocs(g).theta<61) && (chanlocs(g).radius>0.30) %electrodes are in RE
         dimright=dimright+1; %count electrodes
         index2(1,dimright)=g;
     end
@@ -487,7 +487,7 @@ end
 dimback=0;
 index3=zeros(1,nchannels);
 for h=1:nchannels
-    if (abs(chanlocs(1,h).theta)>110)
+    if (abs(chanlocs(h).theta)>110)
         dimback=dimback+1;
         index3(1,dimback)=h;
     end
@@ -589,7 +589,7 @@ dimfront=0; %number of FA electrodes
 index1=zeros(1,nchannels); %indexes of FA electrodes
 
 for k=1:nchannels
-    if (abs(chanlocs(1,k).theta)<60) && (chanlocs(1,k).radius>0.40) %electrodes are in FA
+    if (abs(chanlocs(k).theta)<60) && (chanlocs(k).radius>0.40) %electrodes are in FA
         dimfront=dimfront+1; %count electrodes
         index1(1,dimfront)=k;
     end
@@ -599,7 +599,7 @@ end
 dimback=0;
 index3=zeros(1,nchannels);
 for h=1:nchannels
-    if (abs(chanlocs(1,h).theta)>110)
+    if (abs(chanlocs(h).theta)>110)
         dimback=dimback+1;
         index3(1,dimback)=h;
     end
