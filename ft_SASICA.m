@@ -138,9 +138,11 @@ EEG.icachansind = 1:size(EEG.data,1);
 if isfield(cfg,'reject')
     EEG.reject = cfg.reject;
 end
+assignin('base','EEG',EEG);
 
 EEG = eeg_SASICA(EEG,cfg);
 
+assignin('base','EEG',EEG);
 
 cfg.reject = EEG.reject;
 
