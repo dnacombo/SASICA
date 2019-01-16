@@ -61,6 +61,11 @@
 
 function [cfg, EEG] = ft_SASICA(cfg,comp,data)
 
+% removing any eeglab from the path to avoid interference.
+rm_frompath eeglab
+% adding the local minimal copy of eeglab
+addpath(genpath(fullfile(fileparts(mfilename),'eeglab')));
+
 if ischar(cfg)
     cfg = eeg_SASICA([],['EEG = ' cfg ';']);
     return
