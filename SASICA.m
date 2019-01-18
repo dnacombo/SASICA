@@ -137,6 +137,11 @@ if isempty(EEG)
     errordlg('No EEG loaded')
     return
 end
+if isempty([EEG.chanlocs.X])
+    errordlg('No electrode locations provided.')
+    error('No electrode locations provided.')
+end
+
 assignin('base','EEG',EEG);
 EEG.times = 1000*(EEG.xmin:1/EEG.srate:EEG.xmax);
 if isempty(EEG.icawinv)

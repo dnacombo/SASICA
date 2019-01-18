@@ -146,7 +146,9 @@ if any(~noplot)
     isubplot = 1;
 end
 
-
+if isempty([EEG.chanlocs.X])
+    error('No electrode locations provided.')
+end
 if ~nocompute
     icaacts = eeg_getdatact(EEG,'component',1:ncomp);
     EEG.icaact = icaacts;
