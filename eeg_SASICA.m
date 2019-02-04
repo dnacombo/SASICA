@@ -144,6 +144,9 @@ if isempty([EEG.chanlocs.X])
 end
 if ~nocompute
     icaacts = eeg_getdatact(EEG,'component',1:ncomp);
+    if any(~isreal(icaacts(:)))
+        error('The ICA decomposition seems bad. It contains complex numbers. Run your ICA again.')
+    end
     EEG.icaact = icaacts;
     EEG.reject.SASICA = [];
     for ifield = 1:size(rejfields,1)
