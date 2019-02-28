@@ -93,8 +93,12 @@ EEG.icasphere  = eye(size(EEG.icaweights,2));
 
 
 EEG.chanlocs = struct();
-if isfield(cfg,'layout');
+if isfield(cfg,'layout')
     cfg.layout = ft_prepare_layout(cfg);
+else
+    if not(isfield(data,'elec'))
+        warning('No layout provided. Topographies may be inaccurate')
+    end
 end
 for i = 1:EEG.nbchan
     EEG.chanlocs(i).labels = comp.topolabel{i};
@@ -117,7 +121,6 @@ for i = 1:EEG.nbchan
             EEG.chanlocs(i).Y = data.elec.chanpos(ichan,2);
             EEG.chanlocs(i).Z = data.elec.chanpos(ichan,3);
         end            
-    
     end
 end
 EEG.chanlocs = convertlocs(EEG.chanlocs,'cart2all');
