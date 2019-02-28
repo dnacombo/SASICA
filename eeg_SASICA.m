@@ -736,7 +736,7 @@ if ~noplotselectcomps
             closecallback = ['tmpEEG = get(findobj(''-regexp'',''name'', ''SASICA 1$''),''userdata'');tmpEEG.reject.gcompreject = false(size(tmpEEG.reject.gcompreject));disp(''Operation cancelled. No component is selected for rejection.'');set(findobj(''-regexp'',''name'', ''SASICA 1$''),''userdata'',tmpEEG);clear tmpEEG;'...
                 'uiresume(gcf);'];
             set(cancelbutt,'callback',closecallback );
-            set(hfig(ifig),'closerequestfcn','delete(findobj(''-regexp'',''name'',''pop_selectcomps.* -- SASICA''));disp(''Operation cancelled. No component is selected for rejection.''); ')
+            set(hfig(ifig),'closerequestfcn','disp(''Operation cancelled. No component is selected for rejection.''); delete(findobj(''-regexp'',''name'',''pop_selectcomps.* -- SASICA''));')
             % crazy thing to find and order the axes for the topos.
             ax{ifig} = findobj(hfig(ifig),'type','Axes');
             ax{ifig} = ax{ifig}(end-1:-1:1);% erase pointer to the big axis behind all others and reorder the axes handles.
