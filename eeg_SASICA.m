@@ -687,24 +687,6 @@ if cfg.FASTER.enable
     end
     %----------------------------------------------------------------
 end
-if cfg.MARA.enable
-    rejects(9) = 1;
-    disp('MARA methods selection')
-    %% MARA
-    struct2ws(cfg.MARA);
-    if ~nocompute
-        [rej info] = MARA(EEG);
-        MR.rej = false(1,size(EEG.icaact,1));
-        MR.rej(rej) = true;
-        MR.info = info;
-
-        EEG.reject.SASICA.(strrep(rejfields{9,1},'rej','')) = MR;
-        EEG.reject.SASICA.(rejfields{9,1}) = MR.rej;
-    else
-        MR = EEG.reject.SASICA.(strrep(rejfields{9,1},'rej',''));
-    end
-    %----------------------------------------------------------------
-end
 
 EEG.reject.SASICA.var = var(EEG.icaact(:,:),[],2);% variance of each component
 
