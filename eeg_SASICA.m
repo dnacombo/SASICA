@@ -719,19 +719,21 @@ if any(~noplot)
         textprogressbar('Drawing topos...');
         for ifig = 1:ceil((ncomp)/PLOTPERFIG)
             cmps = [1+(ifig-1)*PLOTPERFIG:min([ncomp,ifig*PLOTPERFIG])];
-            eeg_SASICA(EEG,['pop_selectcomps(EEG, [' num2str(cmps) '],' num2str(ncomp) ');']);
+            pop_selectcomps(EEG, cmps,ncomp);
             hfig(ifig) = gcf;
             set(hfig(ifig),'name',[get(hfig(ifig),'name') ' -- SASICA ' num2str(ifig)]);
             % find the ok button and change its callback fcn
             okbutt = findobj(hfig(ifig),'string','OK');
-            set(okbutt,'callback',['delete(findobj(''-regexp'',''name'',''pop_selectcomps.* -- SASICA''));delete(findobj(''-regexp'',''name'',''Automatic component rejection measures''));' ...
-                'if exist(''ALLEEG'',''var'') && exist(''EEG'',''var'') && exist(''CURRENTSET'',''var''); [ALLEEG EEG CURRENTSET] = eeg_store(ALLEEG, EEG,CURRENTSET); if not(isempty(findobj(''-regexp'',''name'',''^EEGLAB''))); eeglab(''redraw'');end;end;' ...
-                'warndlg({''Remember you need to now subtract the marked components.'' ''Use Tools > Remove components''});']);
+            if ifig == 1
+                set(hfig(ifig),'userdata',EEG);
+            end
+            set(okbutt,'callback','uiresume(findobj(''-regexp'',''name'', ''SASICA 1$''));');
             % find the cancel button and change its callback fcn
             cancelbutt = findobj(hfig(ifig),'string','Cancel');
-            closecallback = ['try; delete(findobj(''-regexp'',''name'',''pop_selectcomps''));delete(findobj(''-regexp'',''name'',''Automatic component rejection measures''));end;'];
-            set(cancelbutt,'callback',[closecallback 'EEG.reject.gcompreject = false(size(EEG.reject.gcompreject));disp(''Operation cancelled. No component is selected for rejection.'');']);
-            set(hfig(ifig),'closerequestfcn',closecallback)
+            closecallback = ['tmpEEG = get(findobj(''-regexp'',''name'', ''SASICA 1$''),''userdata'');tmpEEG.reject.gcompreject = false(size(tmpEEG.reject.gcompreject));disp(''Operation cancelled. No component is selected for rejection.'');set(findobj(''-regexp'',''name'', ''SASICA 1$''),''userdata'',tmpEEG);clear tmpEEG;'...
+                'uiresume(gcf);'];
+            set(cancelbutt,'callback',closecallback );
+            set(hfig(ifig),'closerequestfcn','disp(''Operation cancelled. No component is selected for rejection.''); delete(findobj(''-regexp'',''name'',''pop_selectcomps.* -- SASICA''));')
             % crazy thing to find and order the axes for the topos.
             ax{ifig} = findobj(hfig(ifig),'type','Axes');
             ax{ifig} = ax{ifig}(end-1:-1:1);% erase pointer to the big axis behind all others and reorder the axes handles.
