@@ -704,7 +704,7 @@ for ifield = 1:size(rejfields,1)
         EEG.reject.gcompreject = [EEG.reject.gcompreject ; EEG.reject.SASICA.(rejfields{ifield})];
     end
 end
-EEG.reject.gcompreject = sum(EEG.reject.gcompreject) >= 1;
+EEG.reject.gcompreject = sum(EEG.reject.gcompreject,1) >= 1;
 
 %% plotting
 try
