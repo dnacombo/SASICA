@@ -861,7 +861,7 @@ for i = 1:numel(buttonnums)
     uimenu(hcmenu, 'Label', fastif(status,'ACCEPT','REJECT'), 'Callback', hcb1,'tag',['ctxt' num2str(buttonnums(i))]);
 
     mycb = strrep(get(buttons(i),'Callback'),'''','''''');
-    mycb = regexprep(mycb,'pop_prop','eeg_SASICA(EEG,''pop_prop');
+    mycb = regexprep(mycb,'pop_prop','eeg_SASICA(get(findobj(''-regexp'',''name'', ''SASICA 1\$''),''userdata''),''pop_prop');
     mycb = [mycb ''');'];
     set(buttons(i),'CallBack',mycb)
     set(buttons(i),'uicontextmenu',hcmenu)
