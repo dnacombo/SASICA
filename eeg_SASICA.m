@@ -81,10 +81,13 @@ elseif numel(varargin) == 0
 else
     cfg = vararg2struct(varargin);
 end
-% deal with calling pop_prop here
+% deal with calling private pop_ functions here
 if ischar(cfg) && strncmp(cfg,'pop_',4)
     try
+        tmpEEG = get(findobj('-regexp','name', 'SASICA 1$'),'userdata');
         eval(cfg);
+        set(findobj('-regexp','name', 'SASICA 1$'),'userdata',tmpEEG);
+        clear tmpEEG
     catch ME
         disp('================================');
         disp('================================');
@@ -215,7 +218,7 @@ if cfg.autocorr.enable
         plot(toplot,'o','color',rejfields{1,3})
         for i = 1:numel(autocorr)
             h = scatter(i,autocorr(i),mkersize,'k','filled');
-            cb = sprintf('eeg_SASICA(get(findobj(''-regexp'',''name'', ''SASICA 1$''),''userdata''), ''pop_prop( %s, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', inputname(1), i, i);
+            cb = sprintf('eeg_SASICA([], ''pop_prop( tmpEEG, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', i, i);
             set(h,'buttondownfcn',cb);
         end
     end
@@ -265,7 +268,7 @@ if cfg.focalcomp.enable
         title('Components with focal activity')
         for i = 1:numel(mywt(1,:))
             h = scatter(i,mywt(1,i),mkersize,'k','filled');
-            cb = sprintf('eeg_SASICA(get(findobj(''-regexp'',''name'', ''SASICA 1$''),''userdata''), ''pop_prop( %s, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', inputname(1), i, i);
+            cb = sprintf('eeg_SASICA([], ''pop_prop( tmpEEG, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', i, i);
             set(h,'buttondownfcn',cb);
         end
     end
@@ -314,7 +317,7 @@ if cfg.trialfoc.enable
             plot(xl(2)-diff(xl)/20,yl(2)-diff(yl)/20,'marker','.','color',rejfields{3,3},'markersize',40)
             for i = 1:numel(myact(:,:,1))
                 h = scatter(i,myact(i),mkersize,'k','filled');
-                cb = sprintf('eeg_SASICA(get(findobj(''-regexp'',''name'', ''SASICA 1$''),''userdata''), ''pop_prop( %s, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', inputname(1), i, i);
+                cb = sprintf('eeg_SASICA([], ''pop_prop( tmpEEG, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', i, i);
                 set(h,'buttondownfcn',cb);
             end
 
@@ -368,7 +371,7 @@ if cfg.SNR.enable
         plot(xl(2)-diff(xl)/20,yl(2)-diff(yl)/20,'marker','.','color',rejfields{4,3},'markersize',40)
         for i = 1:numel(SNR)
             h = scatter(i,SNR(i),mkersize,'k','filled');
-            cb = sprintf('eeg_SASICA(get(findobj(''-regexp'',''name'', ''SASICA 1$''),''userdata''), ''pop_prop( %s, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', inputname(1), i, i);
+            cb = sprintf('eeg_SASICA([], ''pop_prop( tmpEEG, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', i, i);
             set(h,'buttondownfcn',cb);
         end
         title({'Signal to noise ratio between' ['Time of interest ' num2str(snrPOI,'%g ') ' and Baseline ' num2str(snrBL,'%g ') ' ms.']})
@@ -412,7 +415,7 @@ if cfg.resvar.enable
         plot(xl(2)-diff(xl)/20,yl(2)-diff(yl)/20,'marker','.','color',rejfields{5,3},'markersize',40)
         for i = 1:numel(resvar)
             h = scatter(i,resvar(i),mkersize,'k','filled');
-            cb = sprintf('eeg_SASICA(get(findobj(''-regexp'',''name'', ''SASICA 1$''),''userdata''), ''pop_prop( %s, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', inputname(1), i, i);
+            cb = sprintf('eeg_SASICA([], ''pop_prop( tmpEEG, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', i, i);
             set(h,'buttondownfcn',cb);
         end
         title({'Residual variance of dipole fit'})
@@ -527,7 +530,7 @@ if cfg.EOGcorr.enable
         for i = 1:numel(cH)
             h(1) = scatter(i,cV(i),mkersize,cols(1,:),'filled');
             h(2) = scatter(i,cH(i),mkersize,cols(2,:),'filled');
-            cb = sprintf('eeg_SASICA(get(findobj(''-regexp'',''name'', ''SASICA 1$''),''userdata''), ''pop_prop( %s, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', inputname(1), i, i);
+            cb = sprintf('eeg_SASICA([], ''pop_prop( tmpEEG, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', i, i);
             set(h,'buttondownfcn',cb);
         end
         if not(sum(legidx) == 0)
@@ -622,7 +625,7 @@ if cfg.chancorr.enable
         for ichan = 1:size(c,1)
             for i = 1:size(c,2)
                 h = scatter(i,c(ichan,i),mkersize,cols(rem(icol+ichan-1,size(cols,1))+1,:),'filled');
-                cb = sprintf('eeg_SASICA(get(findobj(''-regexp'',''name'', ''SASICA 1$''),''userdata''), ''pop_prop( %s, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', inputname(1), i, i);
+                cb = sprintf('eeg_SASICA([], ''pop_prop( tmpEEG, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', i, i);
                 set(h,'buttondownfcn',cb);
             end
         end
@@ -733,7 +736,7 @@ if ~noplotselectcomps
             closecallback = ['tmpEEG = get(findobj(''-regexp'',''name'', ''SASICA 1$''),''userdata'');tmpEEG.reject.gcompreject = false(size(tmpEEG.reject.gcompreject));disp(''Operation cancelled. No component is selected for rejection.'');set(findobj(''-regexp'',''name'', ''SASICA 1$''),''userdata'',tmpEEG);clear tmpEEG;'...
                 'uiresume(gcf);'];
             set(cancelbutt,'callback',closecallback );
-            set(hfig(ifig),'closerequestfcn','disp(''Operation cancelled. No component is selected for rejection.''); delete(findobj(''-regexp'',''name'',''pop_selectcomps.* -- SASICA''));')
+            set(hfig(ifig),'closerequestfcn','delete(findobj(''-regexp'',''name'',''pop_selectcomps.* -- SASICA''));disp(''Operation cancelled. No component is selected for rejection.''); ')
             % crazy thing to find and order the axes for the topos.
             ax{ifig} = findobj(hfig(ifig),'type','Axes');
             ax{ifig} = ax{ifig}(end-1:-1:1);% erase pointer to the big axis behind all others and reorder the axes handles.
@@ -855,13 +858,13 @@ for i = 1:numel(buttonnums)
         status = 0;
     end;
 
-    hcb1 = ['EEG.reject.gcompreject(' num2str(buttonnums(i)) ') = ~EEG.reject.gcompreject(' num2str(buttonnums(i)) ');'...
-        'set(gco,''backgroundcolor'',fastif(EEG.reject.gcompreject(' num2str(buttonnums(i)) '), ' COLREJ ',' COLACC '));'...
-        'set(findobj(''tag'',''ctxt' num2str(buttonnums(i)) '''), ''Label'',fastif(EEG.reject.gcompreject(' num2str(buttonnums(i)) '),''ACCEPT'',''REJECT''));' ];
+    hcb1 = ['tmpEEG = get(findobj(''-regexp'',''name'', ''SASICA 1$''),''userdata'');tmpEEG.reject.gcompreject(' num2str(buttonnums(i)) ') = ~tmpEEG.reject.gcompreject(' num2str(buttonnums(i)) ');'...
+        'set(gco,''backgroundcolor'',fastif(tmpEEG.reject.gcompreject(' num2str(buttonnums(i)) '), ' COLREJ ',' COLACC '));'...
+        'set(findobj(''tag'',''ctxt' num2str(buttonnums(i)) '''), ''Label'',fastif(tmpEEG.reject.gcompreject(' num2str(buttonnums(i)) '),''ACCEPT'',''REJECT''));set(findobj(''-regexp'',''name'', ''SASICA 1$''),''userdata'',tmpEEG);clear tmpEEG;' ];
     uimenu(hcmenu, 'Label', fastif(status,'ACCEPT','REJECT'), 'Callback', hcb1,'tag',['ctxt' num2str(buttonnums(i))]);
 
     mycb = strrep(get(buttons(i),'Callback'),'''','''''');
-    mycb = regexprep(mycb,'pop_prop','eeg_SASICA(get(findobj(''-regexp'',''name'', ''SASICA 1\$''),''userdata''),''pop_prop');
+    mycb = regexprep(mycb,'pop_prop','eeg_SASICA([],''pop_prop');
     mycb = [mycb ''');'];
     set(buttons(i),'CallBack',mycb)
     set(buttons(i),'uicontextmenu',hcmenu)
