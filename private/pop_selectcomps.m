@@ -166,7 +166,6 @@ for ri = compnum
         set( button, 'callback', command );
     end;
     set( button, 'backgroundcolor', eval(fastif(EEG.reject.gcompreject(ri), COLREJ,COLACC)), 'string', int2str(ri));
-    drawnow;
     count = count +1;
 end;
 
