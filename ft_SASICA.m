@@ -63,7 +63,7 @@ rm_frompath eeglab
 addpath(genpath(fullfile(fileparts(mfilename('fullpath')),'eeglab')));
 
 if ischar(cfg)
-    cfg = eeg_SASICA([],['EEG = ' cfg ';']);
+    cfg = SASICA(cfg);
     return
 end
     
