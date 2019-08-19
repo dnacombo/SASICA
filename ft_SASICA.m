@@ -23,8 +23,6 @@
 %                           methods.
 %               ADJUST      use ADJUST (Mongon et al. 2011) detection
 %                           methods
-%               MARA        use MARA (Winkler et al. 2011) detection
-%                           methods
 %               opts        set various options: noplot, nocompute, FontSize
 %
 %           For more detailed information, see doc eeg_SASICA
