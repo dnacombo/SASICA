@@ -4,49 +4,59 @@ function toreject = ft_SASICA_neuromag(cfg,comp,data)
 % plot topos either for magnetometers or gradiometers.
 
 % we use SASICA to find components
-
-% default configuration
-def = [];
-% don't plot anything (yet)
-def.opts.noplot = 1;
-def.opts.noplotselectcomps = 1;
-def.opts.legfig = 0;
-
-def.layout = 'neuromag306all.lay';
-
-cfg = setdef(cfg,def);
-
-% run SASICA to find components
-cfg = ft_SASICA(cfg,comp,data);
-
-
-% plot with SASICA
-% we do this in two steps because we plot only magnetometers
-cfg.opts.noplot = 0;
-cfg.opts.noplotselectcomps = 0;
-cfg.opts.nocompute = 1;
-
-rep = questdlg('Plotting topos for...','Choose what to plot...','magnetometers','gradiometers','none','magnetometers');
-switch rep
-    case 'magnetometers'
-        chan2keep = chnb(ft_channelselection('megmag',comp.topolabel),comp.topolabel);
-    case 'gradiometers'
-        chan2keep = chnb(ft_channelselection('meggrad',comp.topolabel),comp.topolabel);
-    case 'none'
-        toreject = find(cfg.reject.gcompreject);
-        return
+try
+    % default configuration
+    def = [];
+    % don't plot anything (yet)
+    def.opts.noplot = 1;
+    def.opts.noplotselectcomps = 1;
+    def.opts.legfig = 0;
+    
+    def.layout = 'neuromag306all.lay';
+    
+    cfg = setdef(cfg,def);
+    
+    % run SASICA to find components
+    cfg = ft_SASICA(cfg,comp,data);
+    
+    
+    % plot with SASICA
+    % we do this in two steps because we plot only magnetometers
+    cfg.opts.noplot = 0;
+    cfg.opts.noplotselectcomps = 0;
+    cfg.opts.nocompute = 1;
+    
+    rep = questdlg('Plotting topos for...','Choose what to plot...','magnetometers','gradiometers','none','magnetometers');
+    switch rep
+        case 'magnetometers'
+            chan2keep = chnb(ft_channelselection('megmag',comp.topolabel,'neuromag306'),comp.topolabel);
+        case 'gradiometers'
+            chan2keep = chnb(ft_channelselection('meggrad',comp.topolabel,'neuromag306'),comp.topolabel);
+        case 'none'
+            toreject = find(cfg.reject.gcompreject);
+            return
+    end
+    cfgselect = [];
+    cfgselect.channel = chan2keep;
+    datatoplot = ft_selectdata(cfgselect,data);
+    comptoplot = comp;
+    comptoplot.topo = comptoplot.topo(chan2keep,:);
+    comptoplot.unmixing = comptoplot.unmixing(:,chan2keep);
+    comptoplot.topolabel = comptoplot.topolabel(chan2keep);
+    
+    cfg = ft_SASICA(cfg,comptoplot,datatoplot);
+    
+    toreject = find(cfg.reject.gcompreject);
+catch ME
+    disp('================================');
+    disp('================================');
+    disp('ERROR. Please send the entire error message below to max.chaumon@gmail.com. Thanks for your help!');
+    disp('================================');
+    disp(['This is ' eegplugin_SASICA])
+    disp(['This is MATLAB ' version])
+    disp(['Running on ' computer])
+    rethrow(ME)
 end
-cfgselect = [];
-cfgselect.channel = chan2keep;
-datatoplot = ft_selectdata(cfgselect,data);
-comptoplot = comp;
-comptoplot.topo = comptoplot.topo(chan2keep,:);
-comptoplot.unmixing = comptoplot.unmixing(:,chan2keep);
-comptoplot.topolabel = comptoplot.topolabel(chan2keep);
-
-cfg = ft_SASICA(cfg,comptoplot,datatoplot);
-
-toreject = find(cfg.reject.gcompreject);
 
 
 function s = setdef(s,d,keepempty)
@@ -82,7 +92,7 @@ if isstruct(s) && not(isempty(s))
 elseif not(isempty(s)) || keepempty
     s = s;
 elseif isempty(s)
-    s = d;    
+    s = d;
 end
 
 function [nb,channame,strnames] = chnb(channame, varargin)
@@ -106,7 +116,7 @@ function [nb,channame,strnames] = chnb(channame, varargin)
 %   channameornb  - If a string or cell array of strings, it is assumed to
 %                   be (part of) the name of channels to search. Either a
 %                   string with space separated channel names, or a cell
-%                   array of strings. 
+%                   array of strings.
 %                   Note that regular expressions can be used to match
 %                   several channels. See regexp.
 %                   If only one channame pattern is given and the string
@@ -215,7 +225,7 @@ function idx = regexpcell(c,pat, cmds)
 % 'all' (default) returns all indices, including repeats (if several pat match a single cell in c).
 % 'unique' will return unique sorted indices.
 % 'intersect' will return only indices in c that match ALL the patterns in pat.
-% 
+%
 % v1 Maximilien Chaumon 01/05/09
 % v1.1 Maximilien Chaumon 24/05/09 - added ignorecase
 % v2 Maximilien Chaumon 02/03/2010 changed input method.
@@ -260,7 +270,7 @@ if exact
         pat{i_pat} = ['^' pat{i_pat} '$'];
     end
 end
-    
+
 for i_pat = 1:length(pat)
     if ignorecase
         trouv = regexpi(c,pat{i_pat}); % apply regexp on each pattern
