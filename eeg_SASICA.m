@@ -41,12 +41,6 @@
 %                               Thresholding for EEG artifact Rejection.
 %                               Journal of Neuroscience Methods, 192(1),
 %                               152-162. doi:16/j.jneumeth.2010.07.015)
-%              MARA selection:  use MARA classification engine to select components
-%                               (see Winkler I, Haufe S, Tangermann M.
-%                               2011. Automatic Classification of
-%                               Artifactual ICA-Components for Artifact
-%                               Removal in EEG Signals. Behavioral and
-%                               Brain Functions. 7:30.)
 %
 %              Options: noplot: just compute and store result in EEG. Do
 %                           not make any plots.
@@ -129,7 +123,6 @@ rejfields = {'icarejautocorr' 'Autocorrelation' [         0         0    1.0000]
     'icarejchancorr' 'Correlation with channels' [    0.7500    0.7500         0]
     'icarejADJUST' 'ADJUST selections' [    .3 .3 .3]
     'icarejFASTER' 'FASTER selections' [    0 .7 0]
-    'icarejMARA' 'MARA selections' [    .5 .5 0]
     };
 
 ncomp= size(EEG.icawinv,2); % ncomp is number of components
