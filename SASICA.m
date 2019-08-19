@@ -18,7 +18,9 @@
 %              Signal to noise ratio: detects components with weak signal
 %                               to noise ratio between arbitrary baseline
 %                               and interest time windows.
-%              Dipole fit residual variance: detects components with high
+%              Dipole fit residual variance: 
+%                               [not implemented in this version]
+%                               detects components with high
 %                               residual variance after subtraction of the
 %                               forward dipole model. Note that the inverse
 %                               dipole modeling using DIPFIT2 in EEGLAB

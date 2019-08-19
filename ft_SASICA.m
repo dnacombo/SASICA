@@ -37,11 +37,9 @@
 %           results of the selection methods
 %
 %
-%   v0 Maximilien Chaumon Feb 2016
-%
 %   SASICA is a software that helps select independent components of
 %   the electroencephalogram based on various signal measures.
-%     Copyright (C) 2014  Maximilien Chaumon
+%     Copyright (C) 2019  Maximilien Chaumon
 %
 %     This program is free software: you can redistribute it and/or modify
 %     it under the terms of the GNU General Public License as published by

@@ -1,4 +1,35 @@
-This is SASICA, a plugin to EEGlab to help you reject/select independent components based on various properties of these components.
+This is SASICA, a tool to help you reject/select independent components based on various properties of these components.
+
+This is a pre-release of the FieldTrip compatible version of SASICA (originally for EEGLAB). Please report any bug to max.chaumon@gmail.com
+
+Usage:
+[cfg] = ft_SASICA(cfg,comp,data)
+with inputs:
+         - cfg: a structure with field
+               layout: that will be passed to ft_prepare_layout
+              as well as any of the following fields (see below for explanations):
+               autocorr    detect components with low autocorrelation
+               focalcomp   detect focal components in sensor space
+               trialfoc    detect focal components in trial space
+               SNR         detect components with low signal to noise
+                           ratio across trials between two time windows.
+               EOGcorr     detect components with high correlation with
+                           vertical and horizontal EOG channels
+               chancorr    detect components with high correlation with
+                           any channel
+               FASTER      use FASTER (Nolan et al. 2010) detection
+                           methods.
+               ADJUST      use ADJUST (Mongon et al. 2011) detection
+                           methods
+               opts        set various options: noplot, nocompute, FontSize
+
+           For more detailed information, see doc eeg_SASICA
+
+       For an example cfg structure, run cfg = ft_SASICA('getdefs')
+
+        - comp: the output of ft_componentanalysis
+        - data: the output of ft_preprocessing
+
 
 Available methods are:
              Autocorrelation: detects noisy components with weak
@@ -13,12 +44,6 @@ Available methods are:
              Signal to noise ratio: detects components with weak signal
                               to noise ratio between arbitrary baseline
                               and interest time windows.
-             Dipole fit residual variance: detects components with high
-                              residual variance after subtraction of the
-                              forward dipole model. Note that the inverse
-                              dipole modeling using DIPFIT2 in EEGLAB
-                              must have been computed to use this
-                              measure.
              EOG correlation: detects components whose time course
                               correlates with EOG channels.
              Bad channel correlation: detects components whose time course
