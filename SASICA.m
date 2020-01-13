@@ -51,6 +51,8 @@
 %   >> [EEG com] = SASICA( [], 'key', 'val');
 %       Takes optional key val pairs to set specific options from the
 %       command line.
+%   >> SASICA resetprefs
+%       Resets preferences (previous settings).
 %
 % Inputs:
 %   EEG       - input EEG structure
