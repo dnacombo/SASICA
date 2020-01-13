@@ -122,7 +122,7 @@ else
 end;
 count = 1;
 for ri = compnum
-    if ri > numel(EEG.icachansind)
+    if ri > size(EEG.icawinv,2)
         error('don''t panic')
     end
     textprogressbar(ri/comptot*100);
