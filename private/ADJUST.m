@@ -497,6 +497,7 @@ if dimleft*dimright*dimback==0
     disp('ERROR: no channels included in some scalp areas.')
     disp('Check channels distribution and/or change scalp areas definitions in computeSAD.m and computeSED_NOnorm.m')
     disp('ADJUST session aborted.')
+    [out,medie_left,medie_right] = rep2struct(NaN);
     return
 end
 
@@ -609,6 +610,7 @@ if dimfront*dimback==0
     disp('ERROR: no channels included in some scalp areas.')
     disp('Check channels distribution and/or change scalp areas definitions in computeSAD.m and computeSED_NOnorm.m')
     disp('ADJUST session aborted.')
+    [rapp,var_front,var_back,mean_front,mean_back] = rep2struct(NaN);
     return
 end
 
