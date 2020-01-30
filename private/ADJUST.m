@@ -497,7 +497,7 @@ if dimleft*dimright*dimback==0
     disp('ERROR: no channels included in some scalp areas.')
     disp('Check channels distribution and/or change scalp areas definitions in computeSAD.m and computeSED_NOnorm.m')
     disp('ADJUST session aborted.')
-    [out,medie_left,medie_right] = rep2struct(NaN);
+    [out,medie_left,medie_right] = rep2struct(NaN(1,n));
     return
 end
 
@@ -610,7 +610,7 @@ if dimfront*dimback==0
     disp('ERROR: no channels included in some scalp areas.')
     disp('Check channels distribution and/or change scalp areas definitions in computeSAD.m and computeSED_NOnorm.m')
     disp('ADJUST session aborted.')
-    [rapp,var_front,var_back,mean_front,mean_back] = rep2struct(NaN);
+    [rapp,var_front,var_back,mean_front,mean_back] = rep2struct(NaN(1,n));
     return
 end
 
@@ -807,7 +807,7 @@ c=(log((k*prior1*sqrt(var2))/(prior2*sqrt(var1)))*(var2*var1))+(((((med2)^2)*var
 rad=(b^2)-(4*a*c);
 if rad<0
     disp('Negative Discriminant!');
-    [last,med1,med2,var1,var2,prior1,prior2] = rep2struct(NaN);
+    [last,med1,med2,var1,var2,prior1,prior2] = rep2struct(NaN(1,n));
     return;
 end
 
