@@ -527,14 +527,14 @@ if cfg.EOGcorr.enable
         toplot(toplot < corthreshH) = NaN;
         plot(1:ncomp,toplot,'o','color',rejfields{6,3})
         plot(xl(2)-diff(xl)/20,yl(2)-diff(yl)/20,'marker','.','color',rejfields{6,3},'markersize',40)
-        if not(sum(legidx) == 0)
-            legend(hplotcorr(legidx),legstr,'fontsize',10, 'location', 'best');
-        end
         for i = 1:numel(cH)
             h(1) = scatter(i,cV(i),mkersize,cols(1,:),'filled');
             h(2) = scatter(i,cH(i),mkersize,cols(2,:),'filled');
             cb = sprintf('eeg_SASICA(EEG, ''pop_prop( %s, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', inputname(1), i, i);
             set(h,'buttondownfcn',cb);
+        end
+        if not(sum(legidx) == 0)
+            legend(hplotcorr(legidx),legstr,'fontsize',10, 'location', 'best');
         end
     end
     %----------------------------------------------------------------
@@ -621,15 +621,15 @@ if cfg.chancorr.enable
         end
         plot(1:ncomp,toplot,'o','color',rejfields{6,3})
         plot(xl(2)-diff(xl)/20,yl(2)-diff(yl)/20,'marker','.','color',rejfields{6,3},'markersize',40)
-        if not(sum(legidx) == 0)
-            legend(hplotcorr(legidx),legstr,'fontsize',10, 'location', 'best');
-        end
         for ichan = 1:size(c,1)
             for i = 1:size(c,2)
                 h = scatter(i,c(ichan,i),mkersize,cols(rem(icol+ichan-1,size(cols,1))+1,:),'filled');
                 cb = sprintf('eeg_SASICA(EEG, ''pop_prop( %s, 0, %d, findobj(''''tag'''',''''comp%d''''), { ''''freqrange'''', [1 50] })'');', inputname(1), i, i);
                 set(h,'buttondownfcn',cb);
             end
+        end
+        if not(sum(legidx) == 0)
+            legend(hplotcorr(legidx),legstr,'fontsize',10, 'location', 'best');
         end
 
     end
