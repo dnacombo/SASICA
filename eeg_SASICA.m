@@ -746,7 +746,6 @@ if any(~noplot)
                 f = get(ax(i_comp),'parent');
                 set(0,'currentFigure',f);
                 set(f,'CurrentAxes',ax(i_comp));
-                drawnow;
                 hold on
                 for irej = 1:size(rejfields,1)
                     if isfield(EEG.reject.SASICA,rejfields{irej,1}) && ...
