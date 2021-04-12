@@ -8,4 +8,4 @@ end
 
 toolsmenu = findobj(fig,'Tag','tools');
 
-uimenu( toolsmenu,'separator','on', 'label', 'SASICA', 'callback',[ 'SASICA(EEG);' ]); 
+u = uimenu( toolsmenu,'separator','on', 'label', 'SASICA', 'callback',[ 'SASICA;' ], 'userdata', 'startup:off;study:on;chanloc:on;ica:on'); 

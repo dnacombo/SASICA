@@ -136,7 +136,11 @@ if isempty(EEG)
     errordlg('No EEG loaded')
     return
 end
-if isempty([EEG.chanlocs.X])
+if isempty(EEG.data)
+    errordlg('No data in EEG structure.')
+    error('No data in EEG structure.')
+end
+if isempty(EEG.chanlocs) || isempty([EEG.chanlocs.X])
     errordlg('No electrode locations provided.')
     error('No electrode locations provided.')
 end
