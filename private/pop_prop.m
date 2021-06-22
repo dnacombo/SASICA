@@ -78,7 +78,7 @@ p(1).pack('h',{.4 [] .01});
 
 % plotting topoplot
 p(1,1).select()
-topoplot( EEG.icawinv(:,chanorcomp), EEG.chanlocs, 'chaninfo', EEG.chaninfo, ...
+htopo = topoplot( EEG.icawinv(:,chanorcomp), EEG.chanlocs, 'chaninfo', EEG.chaninfo, ...
     'shading', 'interp', 'numcontour', 3); axis square;
 title(basename, 'fontsize', 14);
 
@@ -99,7 +99,7 @@ if EEG.trials > 1
     offset = nan_mean(icaacttmp(:));
     era    = nan_mean(squeeze(icaacttmp)')-offset;
     era_limits=get_era_limits(era);
-    erpimage( icaacttmp-offset, ones(1,EEG.trials)*10000, EEG.times*1000, ...
+    [~,~,~,~,h] = erpimage( icaacttmp-offset, ones(1,EEG.trials)*10000, EEG.times*1000, ...
         '', ei_smooth, 1, 'caxis', 2/3, 'cbar','erp', 'yerplabel', '','erp_vltg_ticks',era_limits);
     title(sprintf('%s activity \\fontsize{10}(global offset %3.3f)', basename, offset));
 else
@@ -123,12 +123,12 @@ else
             offset = nan_mean(EEG.data(chanorcomp,:));
             % Note: we don't need to worry about ERP limits, since ERPs
             % aren't visualized for continuous data
-            erpimage( reshape(EEG.data(chanorcomp,1:erpimageframestot),erpimageframes,ERPIMAGELINES)-offset, ones(1,ERPIMAGELINES)*10000, eegtimes , ...
+            [~,~,~,~,h] = erpimage( reshape(EEG.data(chanorcomp,1:erpimageframestot),erpimageframes,ERPIMAGELINES)-offset, ones(1,ERPIMAGELINES)*10000, eegtimes , ...
                 EI_TITLE, ei_smooth, 1, 'caxis', 2/3, 'cbar');
         else % plot component
             icaacttmp = eeg_getdatact(EEG, 'component', chanorcomp);
             offset = nan_mean(icaacttmp(:));
-            erpimage(reshape(icaacttmp(:,1:erpimageframestot),erpimageframes,ERPIMAGELINES)-offset,ones(1,ERPIMAGELINES)*10000, eegtimes , ...
+            [~,~,~,~,h] = erpimage(reshape(icaacttmp(:,1:erpimageframestot),erpimageframes,ERPIMAGELINES)-offset,ones(1,ERPIMAGELINES)*10000, eegtimes , ...
                 EI_TITLE, ei_smooth, 1, 'caxis', 2/3, 'cbar','yerplabel', '');
         end
     else
@@ -136,6 +136,9 @@ else
         text(0.1, 0.3, [ 'No erpimage plotted' 10 'for small continuous data']);
     end;
 end;
+herpim = h{1};
+
+
 
 % plotting spectrum
 % -----------------
@@ -330,15 +333,30 @@ for i = 1:numel(toPlot)
     hline(1,':k')
 end
 
+%%% open an eegplot when clicking on ERPimage
+children_clickthrough(herpim)
+component_keep = setdiff_bc(1:size(EEG.icaweights,1), chanorcomp);
+compproj = EEG.icawinv(:, component_keep)*eeg_getdatact(EEG, 'component', component_keep, 'reshape', '2d');
+compproj = reshape(compproj, size(compproj,1), EEG.pnts, EEG.trials);
+set(gcf,'userdata',struct('icomp',chanorcomp, 'compproj', compproj));
+set(herpim,'hittest','on','ButtonDownFcn','tmp = get(gcf,''userdata''); tmp.time = getpointerpos; tmp.time = round(tmp.time(2)); tmp.figh = findobj(''Name'', [''Effect of removing component #'' num2str(tmp.icomp) '' Black = before rejection; red = after rejection'']); if isempty(tmp.figh); eegplot( EEG.data(EEG.icachansind,:,:), ''time'',tmp.time,''srate'', EEG.srate, ''title'', [''Effect of removing component #'' num2str(tmp.icomp) '' Black = before rejection; red = after rejection''], ''limits'', [EEG.xmin EEG.xmax]*1000, ''data2'', tmp.compproj); else tmp.EPosition = findobj(''tag'',''EPosition'',''parent'',tmp.figh); set(tmp.EPosition, ''String'', num2str(tmp.time)); eegplot(''drawp'',0,[],tmp.figh);end; clear tmp' )
+
+%%% open a component time-course plot when clicking on topoplot
+children_clickthrough(htopo)
+set(htopo,'hittest','on','ButtonDownFcn',['tmp = get(gcf,''userdata''); tmpEEG = pop_subcomp(EEG, [' num2str(component_keep) '],0 );tmpdata = eeg_getdatact(tmpEEG, ''component'', 1); tmp.scale = range(tmpdata(:));eegplot(tmpdata,''srate'',tmpEEG.srate, ''title'', [''Scroll component #'' num2str(tmp.icomp) '' activities''],''limits'', [EEG.xmin EEG.xmax]*1000); tmp.figh = gcf; tmp.ESpacing = findobj(''tag'',''ESpacing'',''parent'',tmp.figh); set(tmp.ESpacing, ''String'', num2str(tmp.scale)); eegplot(''draws'',0,[],tmp.figh); clear tmp'])
+
 
 % display buttons
 % ---------------
 if ishandle(winhandle)
     COLREJ = '[1 0.6 0.6]';
     COLACC = '[0.75 1 0.75]';
+    command_close_eegplot = ['close(findobj(''Name'', [''Effect of removing component #' num2str(chanorcomp) ' Black = before rejection; red = after rejection'']));'];
+    command_close_eegplot2 = ['close(findobj(''Name'',[''Scroll component #' num2str(chanorcomp) ' activities'']));'];
+    set(gcf,'CloseRequestFcn',[command_close_eegplot command_close_eegplot2 'delete(gcf);']);
     % CANCEL button
     % -------------
-    h  = uicontrol(gcf, 'Style', 'pushbutton', 'backgroundcolor', GUIBUTTONCOLOR, 'string', 'Cancel', 'Units','Normalized','Position',[-10 -10 15 6].*s+q, 'callback', 'close(gcf);');
+    h  = uicontrol(gcf, 'Style', 'pushbutton', 'backgroundcolor', GUIBUTTONCOLOR, 'string', 'Cancel', 'Units','Normalized','Position',[-10 -10 15 6].*s+q, 'callback', ['close(gcf);']);
 
     %     % VALUE button
     %     % -------------
@@ -378,7 +396,8 @@ if ishandle(winhandle)
             sprintf('if ~isempty(obj) && tmpstatus set(obj, ''backgroundcolor'', %s); else set(obj, ''backgroundcolor'', %s); end;', ...
             COLREJ, COLACC)];
     end;
-    command = [ command 'close(gcf); clear tmpstatus' ];
+    command = [ command 'close(gcf); clear tmpstatus;' ];
+
     h  = uicontrol(gcf, 'Style', 'pushbutton', 'string', 'OK', 'backgroundcolor', GUIBUTTONCOLOR, 'Units','Normalized', 'Position',[90 -10 15 6].*s+q, 'callback', command);
 
     %     % draw the figure for statistical values
@@ -424,7 +443,7 @@ else
 end;
 
 return;
-
+end
 function era_limits=get_era_limits(era)
 %function era_limits=get_era_limits(era)
 %
@@ -446,7 +465,7 @@ mn=orderofmag(mn)*round(mn/orderofmag(mn));
 mx=orderofmag(mx)*round(mx/orderofmag(mx));
 era_limits=[mn mx];
 
-
+end
 function [lengths]  =  min_z(list_properties, rejection_options)
 if (~exist('rejection_options', 'var'))
     rejection_options.measure = ones(1, size(list_properties, 2));
@@ -460,6 +479,7 @@ zs(isnan(zs)) = 0;
 all_l  =  abs(zs) > repmat(rejection_options.z, size(list_properties, 1), 1);
 lengths  =  any(all_l(:, rejection_options.measure), 2);
 
+end
 function out = nan_mean(in)
 
 nans = find(isnan(in));
@@ -473,7 +493,7 @@ nonnans(nononnans) = 1;
 out = sum(in)./nonnans;
 out(nononnans) = NaN;
 
-
+end
 function ord=orderofmag(val)
 %function ord=orderofmag(val)
 %
@@ -501,7 +521,7 @@ else
     return;
 end
 
-
+end
 function tw = strwrap(t,n)
 
 % tw = strwrap(t,n)
@@ -524,5 +544,14 @@ while not(isempty(t))
     t = strtrim(t);
 end
 
+end
 
+function children_clickthrough(h)
 
+set(h,'HitTest','off');
+
+hh = h.Children;
+for ih = 1:numel(hh)
+    children_clickthrough(hh(ih))
+end
+end
