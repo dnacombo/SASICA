@@ -38,7 +38,7 @@ data_bio = ft_selectdata(cfg,data_rs);
 cfg = [];
 cfg.method = 'runica';
 cfg.numcomponent = 60;
-comp = ft_componentanalysis(cfg,datamag);
+compmag = ft_componentanalysis(cfg,datamag);
 compgrad = ft_componentanalysis(cfg,datagrad);
 
 nudatamag = ft_appenddata([],datamag,data_bio);
@@ -48,6 +48,4 @@ nudatagrad = ft_appenddata([],datamag,data_bio);
 cfg = [];
 cfg.autocorr.enable = 1;
 
-% problem with channels that don't have coordinates in layout.
-
-toreject = ft_SASICA_neuromag(cfg,comp,data_rs);
+toreject = ft_SASICA_neuromag(cfg,compmag,data_rs);
