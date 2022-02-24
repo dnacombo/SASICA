@@ -71,6 +71,9 @@ end
 EEG = eeg_emptyset;
 EEG.setname = 'internal';
 EEG.nbchan = numel(comp.topolabel);
+if EEG.nbchan == 0
+    error('No more channels here.')
+end
 EEG.trials = numel(comp.trial);
 EEG.pnts = size(comp.trial{1},2);
 EEG.srate = comp.fsample;
