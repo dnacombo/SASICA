@@ -700,6 +700,11 @@ fprintf('... Done.\n')
 drawnow
 
 %% Final computations
+if all(~rejects)
+    close(321541)
+    errordlg('You haven''t chosen any selection method. Please enable at least one method')
+    error('You haven''t chosen any selection method. Please enable at least one method')
+end
 % combine in gcompreject field and pass to pop_selectcomps
 EEG.reject.gcompreject = false(1,ncomp);
 for ifield = 1:size(rejfields,1)
