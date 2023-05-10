@@ -338,8 +338,8 @@ children_clickthrough(herpim)
 component_keep = setdiff_bc(1:size(EEG.icaweights,1), chanorcomp);
 compproj = EEG.icawinv(:, component_keep)*eeg_getdatact(EEG, 'component', component_keep, 'reshape', '2d');
 compproj = reshape(compproj, size(compproj,1), EEG.pnts, EEG.trials);
-set(gcf,'userdata',struct('icomp',chanorcomp, 'compproj', compproj));
-set(herpim,'hittest','on','ButtonDownFcn','tmp = get(gcf,''userdata''); tmp.time = getpointerpos; tmp.time = round(tmp.time(2)); tmp.figh = findobj(''Name'', [''Effect of removing component #'' num2str(tmp.icomp) '' Black = before rejection; red = after rejection'']); if isempty(tmp.figh); eegplot( EEG.data(EEG.icachansind,:,:), ''time'',tmp.time,''srate'', EEG.srate, ''title'', [''Effect of removing component #'' num2str(tmp.icomp) '' Black = before rejection; red = after rejection''], ''limits'', [EEG.xmin EEG.xmax]*1000, ''data2'', tmp.compproj); else tmp.EPosition = findobj(''tag'',''EPosition'',''parent'',tmp.figh); set(tmp.EPosition, ''String'', num2str(tmp.time)); eegplot(''drawp'',0,[],tmp.figh);end; clear tmp' )
+set(gcf,'userdata',struct('icomp',chanorcomp, 'compproj', compproj,'EEG',EEG));
+set(herpim,'hittest','on','ButtonDownFcn','tmp = get(gcf,''userdata''); tmp.time = getpointerpos; tmp.time = round(tmp.time(2)); tmp.figh = findobj(''Name'', [''Effect of removing component #'' num2str(tmp.icomp) '' Black = before rejection; red = after rejection'']); if isempty(tmp.figh); eegplot( tmp.EEG.data(tmp.EEG.icachansind,:,:), ''time'',tmp.time,''srate'', tmp.EEG.srate, ''title'', [''Effect of removing component #'' num2str(tmp.icomp) '' Black = before rejection; red = after rejection''], ''limits'', [tmp.EEG.xmin tmp.EEG.xmax]*1000, ''data2'', tmp.compproj); else tmp.EPosition = findobj(''tag'',''EPosition'',''parent'',tmp.figh); set(tmp.EPosition, ''String'', num2str(tmp.time)); eegplot(''drawp'',0,[],tmp.figh);end; clear tmp' )
 
 %%% open a component time-course plot when clicking on topoplot
 children_clickthrough(htopo)
