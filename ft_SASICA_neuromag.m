@@ -29,9 +29,9 @@ try
     rep = questdlg('Plotting topos for...','Choose what to plot...','magnetometers','gradiometers','none','magnetometers');
     switch rep
         case 'magnetometers'
-            chan2keep = chnb(ft_channelselection('megmag',comp.topolabel,'neuromag306'),comp.topolabel);
+            chan2keep = ft_channelselection('megmag',comp.topolabel,'neuromag306');
         case 'gradiometers'
-            chan2keep = chnb(ft_channelselection('meggrad',comp.topolabel,'neuromag306'),comp.topolabel);
+            chan2keep = ft_channelselection('meggrad',comp.topolabel,'neuromag306');
         case 'none'
             toreject = find(cfg.reject.gcompreject);
             return
@@ -40,9 +40,10 @@ try
     cfgselect.channel = chan2keep;
     datatoplot = ft_selectdata(cfgselect,data);
     comptoplot = comp;
-    comptoplot.topo = comptoplot.topo(chan2keep,:);
-    comptoplot.unmixing = comptoplot.unmixing(:,chan2keep);
-    comptoplot.topolabel = comptoplot.topolabel(chan2keep);
+    ichan2keep = chnb(chan2keep,comptoplot.topolabel);
+    comptoplot.topo = comptoplot.topo(ichan2keep,:);
+    comptoplot.unmixing = comptoplot.unmixing(:,ichan2keep);
+    comptoplot.topolabel = comptoplot.topolabel(ichan2keep);
     
     cfg = ft_SASICA(cfg,comptoplot,datatoplot);
     
