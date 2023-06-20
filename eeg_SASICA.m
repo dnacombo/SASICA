@@ -135,6 +135,9 @@ if numel(noplot) == 1
     noplot = noplot * ones(1,size(rejfields,1));
 end
 
+if nocompute && not(isfield(EEG.reject,'SASICA'))
+    error('Measures have not been precomputed. Please untick the "just replot" option, or set cfg.nocompute = 0.')
+end
 if any(~noplot)
     figure(321541);clf;% just a random number so we always work in the same figure
     BACKCOLOR           = [.93 .96 1];
