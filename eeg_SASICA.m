@@ -691,7 +691,63 @@ if cfg.FASTER.enable
     end
     %----------------------------------------------------------------
 end
+if cfg.CARACAS.enable
+    rejects(9) = 1;
+    disp('CARACAS methods selection')
+    %% CARACAS
+    struct2ws(cfg.CARACAS);
+    if ~nocompute
+        cfg_CARACAS = [];
+        cfg_CARACAS.bpm_min = 45;                           % expected heart beat per min, for sanity check [default: 45 and 90]
+        cfg_CARACAS.bpm_max = 90;
+        cfg_CARACAS.threshold_cond_IC_method1 = .5;         % minimum proportion of conditions that must be met in order that an IC could be considered as a potential heart IC [default: 0.5, so if method_chosen == 'absolute_threshold', an IC must be in the top 3 for at least 50% of the metrics]
+        cfg_CARACAS.threshold_std_method2 = 2.5;            % if method_chosen == 'mean_std', an IC will be considered as a potential heart IC if its proportion of conditions met (i.e., its score) is above mean(all_score) + threshold_std_method2 * std(all_score) [default: 2.5]
+        cfg_CARACAS.min_recording_duration_sec = 20;        % minimum duration (in sec) of the IC timecourse (default: 20]
+        cfg_CARACAS.mini_bouts_duration_for_SignalAmplRange = 10; % for sanity check (avoids false positive): the time course of a potential heart IC must be ~regular. The timecourse will be divided into mini-segments of this duration, and we will check that the amplitude between these mini-bouts is ~similar. [default: 10]
+        cfg_CARACAS.threshold_regularity_signal_minmax = 1.5; % For each mini-bout, the averaged signal amplitude is computed. The IC timecourse will be considered as irregular if: (max(Mean_Amp_minibout) - min(Mean_Amp_minibout)) / min(Mean_Amp_minibout) > threshold_regularity_signal_minmax [default: 1.5]
 
+        IC_not_cardiac_bc_PQstd = [];
+        for i_comp = 1:ncomp
+            ECG_candidate = icaacts(i_comp,:,:);
+            [HeartBeats] = heart_peak_detect(ECG_candidate, EEG.srate);
+
+            PQ_intervals = [HeartBeats.P_time] - [HeartBeats.Q_time];
+            low_threshold = prctile(PQ_intervals, 15); 
+            high_threshold = prctile(PQ_intervals, 85); 
+            filtered_PQ_intervals = PQ_intervals(PQ_intervals >= low_threshold & PQ_intervals <= high_threshold);
+            if std(filtered_PQ_intervals) > abs(mean(filtered_PQ_intervals))/3
+                IC_not_cardiac_bc_PQstd(end+1) = i_comp;
+            end
+
+            RR_intervals = diff([HeartBeats.R_time]);
+            low_threshold = prctile(RR_intervals, 0);
+            high_threshold = prctile(RR_intervals, 70);
+            filtered_RR_intervals = RR_intervals(RR_intervals >= low_threshold & RR_intervals <= high_threshold);
+            if std(filtered_RR_intervals) > mean(filtered_RR_intervals)/3
+                IC_not_cardiac_bc_RRstd(end+1) = i_comp;
+            end
+
+            Rampl = abs(ECG_candidate([HeartBeats.R_sample]));
+            low_threshold = prctile(Rampl, 15);
+            high_threshold = prctile(Rampl, 85);
+            filtered_Rampl = Rampl(Rampl >= low_threshold & Rampl <= high_threshold);
+            if std(filtered_Rampl) > abs(mean(filtered_Rampl))/3
+                IC_not_cardiac_bc_Ramplstd(en+1) = i_comp;
+            end
+
+            % todo: %  Metric to check homogeneous SignalAmpl across the recording
+            % todo: % check BPM within physiological range
+            % todo: % Remove potential cardiac if too high std for RR interval or Rampl
+            % todo: % Remove potential cardiac if too high SignalAmpl range
+        end
+
+        EEG.reject.SASICA.(strrep(rejfields{8,1},'rej','')) = FST;
+        EEG.reject.SASICA.(rejfields{8,1}) = FST.rej;
+    else
+        FST = EEG.reject.SASICA.(strrep(rejfields{8,1},'rej',''));
+    end
+    %----------------------------------------------------------------
+end
 EEG.reject.SASICA.var = var(EEG.icaact(:,:),[],2);% variance of each component
 
 if (cfg.ADJUST.enable||cfg.FASTER.enable) && any(~noplot)
