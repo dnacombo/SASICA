@@ -126,6 +126,7 @@ rejfields = {'icarejautocorr' 'Autocorrelation' [         0         0    1.0000]
     'icarejchancorr' 'Correlation with channels' [    0.7500    0.7500         0]
     'icarejADJUST' 'ADJUST selections' [    .3 .3 .3]
     'icarejFASTER' 'FASTER selections' [    0 .7 0]
+    'icarejCARACAS' 'CARACAS selections' [0.22745     0.37255     0.80392]
     };
 
 ncomp= size(EEG.icawinv,2); % ncomp is number of components
@@ -698,53 +699,85 @@ if cfg.CARACAS.enable
     struct2ws(cfg.CARACAS);
     if ~nocompute
         cfg_CARACAS = [];
-        cfg_CARACAS.bpm_min = 45;                           % expected heart beat per min, for sanity check [default: 45 and 90]
-        cfg_CARACAS.bpm_max = 90;
-        cfg_CARACAS.threshold_cond_IC_method1 = .5;         % minimum proportion of conditions that must be met in order that an IC could be considered as a potential heart IC [default: 0.5, so if method_chosen == 'absolute_threshold', an IC must be in the top 3 for at least 50% of the metrics]
-        cfg_CARACAS.threshold_std_method2 = 2.5;            % if method_chosen == 'mean_std', an IC will be considered as a potential heart IC if its proportion of conditions met (i.e., its score) is above mean(all_score) + threshold_std_method2 * std(all_score) [default: 2.5]
-        cfg_CARACAS.min_recording_duration_sec = 20;        % minimum duration (in sec) of the IC timecourse (default: 20]
-        cfg_CARACAS.mini_bouts_duration_for_SignalAmplRange = 10; % for sanity check (avoids false positive): the time course of a potential heart IC must be ~regular. The timecourse will be divided into mini-segments of this duration, and we will check that the amplitude between these mini-bouts is ~similar. [default: 10]
-        cfg_CARACAS.threshold_regularity_signal_minmax = 1.5; % For each mini-bout, the averaged signal amplitude is computed. The IC timecourse will be considered as irregular if: (max(Mean_Amp_minibout) - min(Mean_Amp_minibout)) / min(Mean_Amp_minibout) > threshold_regularity_signal_minmax [default: 1.5]
+        cfg_CARACAS.thresh_sk = 2;
+        cfg_CARACAS.thresh_ku = [5 100];
+        cfg_CARACAS.thresh_PQ = 1/3;
+        cfg_CARACAS.thresh_RR = 1/3;
+        cfg_CARACAS.thresh_Rampl = .25;
+        cfg_CARACAS.thresh_bpm = [45 90];
+        cfg_CARACAS.prctl_PQ = [15 85];
+        cfg_CARACAS.prctl_RR = [0 70];
+        cfg_CARACAS.prctl_Rampl = [15 85];
 
-        IC_not_cardiac_bc_PQstd = [];
+
+        meas = struct([]);
+        NotCardiac = false(1,ncomp);
         for i_comp = 1:ncomp
-            ECG_candidate = icaacts(i_comp,:,:);
-            [HeartBeats] = heart_peak_detect(ECG_candidate, EEG.srate);
+            ECG_candidate = [icaacts(i_comp,:,:) NaN(1,1,size(icaacts,3))];
+            ECG_candidate = ECG_candidate(:)';
 
+
+            cfg_peak = [];
+            % cfg_peak.plotall         = 1;
+            % cfg_peak.plotthresh      = 0;
+            % cfg_peak.plotbeat        = 1;
+            % cfg_peak.plotcorr        = 0;
+            % cfg_peak.plotfinal       = 1;
+            cfg_peak.corthresh = 0.2;
+
+            [HeartBeats] = heart_peak_detect(ECG_candidate, EEG.srate, cfg_peak);
+            
+            meas(i_comp).sk = HeartBeats.sk;
+            if meas(i_comp).sk < cfg_CARACAS.thresh_sk
+                NotCardiac(i_comp) = 1;
+            end
+            meas(i_comp).ku = HeartBeats.ku;
+            if meas(i_comp).ku < cfg_CARACAS.thresh_ku(1) || meas(i_comp).ku > cfg_CARACAS.thresh_ku(2)
+                NotCardiac(i_comp) = 1;
+            end
             PQ_intervals = [HeartBeats.P_time] - [HeartBeats.Q_time];
-            low_threshold = prctile(PQ_intervals, 15); 
-            high_threshold = prctile(PQ_intervals, 85); 
+            low_threshold = prctile(PQ_intervals, cfg_CARACAS.prctl_PQ(1)); 
+            high_threshold = prctile(PQ_intervals, cfg_CARACAS.prctl_PQ(2)); 
             filtered_PQ_intervals = PQ_intervals(PQ_intervals >= low_threshold & PQ_intervals <= high_threshold);
-            if std(filtered_PQ_intervals) > abs(mean(filtered_PQ_intervals))/3
-                IC_not_cardiac_bc_PQstd(end+1) = i_comp;
+            meas(i_comp).PQ = std(filtered_PQ_intervals) / abs(mean(filtered_PQ_intervals));
+            if  meas(i_comp).PQ > cfg_CARACAS.thresh_PQ
+                NotCardiac(i_comp) = 1;
             end
 
             RR_intervals = diff([HeartBeats.R_time]);
-            low_threshold = prctile(RR_intervals, 0);
-            high_threshold = prctile(RR_intervals, 70);
+            low_threshold = prctile(RR_intervals, cfg_CARACAS.prctl_RR(1));
+            high_threshold = prctile(RR_intervals, cfg_CARACAS.prctl_RR(2));
             filtered_RR_intervals = RR_intervals(RR_intervals >= low_threshold & RR_intervals <= high_threshold);
-            if std(filtered_RR_intervals) > mean(filtered_RR_intervals)/3
-                IC_not_cardiac_bc_RRstd(end+1) = i_comp;
+            meas(i_comp).RR = std(filtered_RR_intervals) / mean(filtered_RR_intervals);
+            if  meas(i_comp).RR > cfg_CARACAS.thresh_RR
+                NotCardiac(i_comp) = 1;
             end
 
             Rampl = abs(ECG_candidate([HeartBeats.R_sample]));
-            low_threshold = prctile(Rampl, 15);
-            high_threshold = prctile(Rampl, 85);
+            low_threshold = prctile(Rampl, cfg_CARACAS.prctl_Rampl(1));
+            high_threshold = prctile(Rampl, cfg_CARACAS.prctl_Rampl(2));
             filtered_Rampl = Rampl(Rampl >= low_threshold & Rampl <= high_threshold);
-            if std(filtered_Rampl) > abs(mean(filtered_Rampl))/3
-                IC_not_cardiac_bc_Ramplstd(en+1) = i_comp;
+            meas(i_comp).Rampl = std(filtered_Rampl) / abs(mean(filtered_Rampl));
+            if  meas(i_comp).Rampl > cfg_CARACAS.thresh_Rampl
+                NotCardiac(i_comp) = 1;
             end
 
-            % todo: %  Metric to check homogeneous SignalAmpl across the recording
-            % todo: % check BPM within physiological range
-            % todo: % Remove potential cardiac if too high std for RR interval or Rampl
-            % todo: % Remove potential cardiac if too high SignalAmpl range
-        end
+            meas(i_comp).bpm = numel(HeartBeats) / ((size(ECG_candidate,2) / EEG.srate  - 0.5) / 60);
+            if meas(i_comp).bpm < cfg_CARACAS.thresh_bpm(1) || meas(i_comp).bpm > cfg_CARACAS.thresh_bpm(2)
+                NotCardiac(i_comp) = 1;
+            end
 
-        EEG.reject.SASICA.(strrep(rejfields{8,1},'rej','')) = FST;
-        EEG.reject.SASICA.(rejfields{8,1}) = FST.rej;
+        end
+        rej = true(1,size(icaacts,1));
+        rej(NotCardiac) = 0;
+        
+        EEG.reject.SASICA.(strrep(rejfields{9,1},'rej','')) = meas;
+        EEG.reject.SASICA.([strrep(rejfields{9,1},'rej','') '_cfg']) = cfg_CARACAS;
+        EEG.reject.SASICA.(rejfields{9,1}) = rej;
+        CARACAS.rej = rej;
+        CARACAS.meas = meas;
     else
-        FST = EEG.reject.SASICA.(strrep(rejfields{8,1},'rej',''));
+        CARACAS = EEG.reject.SASICA.(strrep(rejfields{9,1},'rej',''));
     end
     %----------------------------------------------------------------
 end
@@ -950,9 +983,26 @@ if isstruct(s) && not(isempty(s))
     end
 elseif not(isempty(s))
     s = s;
-elseif isempty(s);
+elseif isempty(s)
     s = d;
 end
 
 function res = existnotempty(s,f)
 res = isfield(s,f) && not(isempty(s.(f)));
+
+function interval = gimme_interval(l, HeartBeats)
+
+intervals_sec = [HeartBeats.([l(1) '_time'])] - [HeartBeats.([l(2) '_time'])];
+
+% figure;
+% hist(intervals_sec)
+
+low_threshold = prctile(intervals_sec, 15);
+high_threshold = prctile(intervals_sec, 85);
+
+filtered_intervals = intervals_sec(intervals_sec >= low_threshold & intervals_sec <= high_threshold);
+
+% figure;
+% hist(filtered_intervals);
+interval = std(filtered_intervals)/(abs(mean(filtered_intervals)));
+
