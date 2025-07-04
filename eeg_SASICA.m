@@ -698,16 +698,6 @@ if cfg.CARACAS.enable
     %% CARACAS
     struct2ws(cfg.CARACAS);
     if ~nocompute
-        cfg_CARACAS = [];
-        cfg_CARACAS.thresh_sk = 2;
-        cfg_CARACAS.thresh_ku = [5 100];
-        cfg_CARACAS.thresh_PQ = 1/3;
-        cfg_CARACAS.thresh_RR = 1/3;
-        cfg_CARACAS.thresh_Rampl = .25;
-        cfg_CARACAS.thresh_bpm = [45 90];
-        cfg_CARACAS.prctl_PQ = [15 85];
-        cfg_CARACAS.prctl_RR = [0 70];
-        cfg_CARACAS.prctl_Rampl = [15 85];
 
 
         meas = struct([]);
@@ -728,42 +718,42 @@ if cfg.CARACAS.enable
             [HeartBeats] = heart_peak_detect(ECG_candidate, EEG.srate, cfg_peak);
             
             meas(i_comp).sk = HeartBeats.sk;
-            if meas(i_comp).sk < cfg_CARACAS.thresh_sk
+            if meas(i_comp).sk < cfg.CARACAS.thresh_sk
                 NotCardiac(i_comp) = 1;
             end
             meas(i_comp).ku = HeartBeats.ku;
-            if meas(i_comp).ku < cfg_CARACAS.thresh_ku(1) || meas(i_comp).ku > cfg_CARACAS.thresh_ku(2)
+            if meas(i_comp).ku < cfg.CARACAS.thresh_ku(1) || meas(i_comp).ku > cfg.CARACAS.thresh_ku(2)
                 NotCardiac(i_comp) = 1;
             end
             PQ_intervals = [HeartBeats.P_time] - [HeartBeats.Q_time];
-            low_threshold = prctile(PQ_intervals, cfg_CARACAS.prctl_PQ(1)); 
-            high_threshold = prctile(PQ_intervals, cfg_CARACAS.prctl_PQ(2)); 
+            low_threshold = prctile(PQ_intervals, cfg.CARACAS.prctl_PQ(1)); 
+            high_threshold = prctile(PQ_intervals, cfg.CARACAS.prctl_PQ(2)); 
             filtered_PQ_intervals = PQ_intervals(PQ_intervals >= low_threshold & PQ_intervals <= high_threshold);
             meas(i_comp).PQ = std(filtered_PQ_intervals) / abs(mean(filtered_PQ_intervals));
-            if  meas(i_comp).PQ > cfg_CARACAS.thresh_PQ
+            if  meas(i_comp).PQ > cfg.CARACAS.thresh_PQ
                 NotCardiac(i_comp) = 1;
             end
 
             RR_intervals = diff([HeartBeats.R_time]);
-            low_threshold = prctile(RR_intervals, cfg_CARACAS.prctl_RR(1));
-            high_threshold = prctile(RR_intervals, cfg_CARACAS.prctl_RR(2));
+            low_threshold = prctile(RR_intervals, cfg.CARACAS.prctl_RR(1));
+            high_threshold = prctile(RR_intervals, cfg.CARACAS.prctl_RR(2));
             filtered_RR_intervals = RR_intervals(RR_intervals >= low_threshold & RR_intervals <= high_threshold);
             meas(i_comp).RR = std(filtered_RR_intervals) / mean(filtered_RR_intervals);
-            if  meas(i_comp).RR > cfg_CARACAS.thresh_RR
+            if  meas(i_comp).RR > cfg.CARACAS.thresh_RR
                 NotCardiac(i_comp) = 1;
             end
 
             Rampl = abs(ECG_candidate([HeartBeats.R_sample]));
-            low_threshold = prctile(Rampl, cfg_CARACAS.prctl_Rampl(1));
-            high_threshold = prctile(Rampl, cfg_CARACAS.prctl_Rampl(2));
+            low_threshold = prctile(Rampl, cfg.CARACAS.prctl_Rampl(1));
+            high_threshold = prctile(Rampl, cfg.CARACAS.prctl_Rampl(2));
             filtered_Rampl = Rampl(Rampl >= low_threshold & Rampl <= high_threshold);
             meas(i_comp).Rampl = std(filtered_Rampl) / abs(mean(filtered_Rampl));
-            if  meas(i_comp).Rampl > cfg_CARACAS.thresh_Rampl
+            if  meas(i_comp).Rampl > cfg.CARACAS.thresh_Rampl
                 NotCardiac(i_comp) = 1;
             end
 
             meas(i_comp).bpm = numel(HeartBeats) / ((size(ECG_candidate,2) / EEG.srate  - 0.5) / 60);
-            if meas(i_comp).bpm < cfg_CARACAS.thresh_bpm(1) || meas(i_comp).bpm > cfg_CARACAS.thresh_bpm(2)
+            if meas(i_comp).bpm < cfg.CARACAS.thresh_bpm(1) || meas(i_comp).bpm > cfg.CARACAS.thresh_bpm(2)
                 NotCardiac(i_comp) = 1;
             end
 
@@ -772,7 +762,7 @@ if cfg.CARACAS.enable
         rej(NotCardiac) = 0;
         
         EEG.reject.SASICA.(strrep(rejfields{9,1},'rej','')) = meas;
-        EEG.reject.SASICA.([strrep(rejfields{9,1},'rej','') '_cfg']) = cfg_CARACAS;
+        EEG.reject.SASICA.([strrep(rejfields{9,1},'rej','') '_cfg']) = cfg.CARACAS;
         EEG.reject.SASICA.(rejfields{9,1}) = rej;
         CARACAS.rej = rej;
         CARACAS.meas = meas;
