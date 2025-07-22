@@ -714,6 +714,7 @@ if cfg.CARACAS.enable
             % cfg_peak.plotcorr        = 0;
             % cfg_peak.plotfinal       = 1;
             cfg_peak.corthresh = 0.2;
+            cfg_peak.absPT = 1;
 
             [HeartBeats] = heart_peak_detect(ECG_candidate, EEG.srate, cfg_peak);
             
