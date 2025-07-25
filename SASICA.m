@@ -859,16 +859,19 @@ def.FASTER.blinkchanname = [];
 def.ADJUST.enable = false;
 
 def.CARACAS.enable = false;
-def.CARACAS.thresh_sk = 1;
-def.CARACAS.thresh_ku = [5 100];
-def.CARACAS.thresh_PQ = 1/3;
-def.CARACAS.thresh_RR = 1/3;
-def.CARACAS.thresh_Rampl = .25;
-def.CARACAS.thresh_bpm = [35 100];
+def.CARACAS.thresh_sk = 1.35;
+def.CARACAS.thresh_ku = [7 230];
+def.CARACAS.thresh_PQ = .9;
+def.CARACAS.thresh_RR = .8;
+def.CARACAS.thresh_Rampl = .6;
+def.CARACAS.thresh_bpm = [35 110];
 def.CARACAS.prctl_PQ = [15 85];
 def.CARACAS.prctl_RR = [0 70];
 def.CARACAS.prctl_Rampl = [15 85];
-
+def.CARACAS.cfg_peak.corthresh = .2;
+def.CARACAS.cfg_peak.absPT = 1;
+def.CARACAS.cfg_peak.abstemplate = 1;
+def.CARACAS.cfg_peak.NaNST = 1;
 
 def.opts.FontSize = 14;
 def.opts.noplot = 0;

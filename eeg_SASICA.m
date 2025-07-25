@@ -706,16 +706,6 @@ if cfg.CARACAS.enable
             ECG_candidate = [icaacts(i_comp,:,:) NaN(1,1,size(icaacts,3))];
             ECG_candidate = ECG_candidate(:)';
 
-
-            cfg_peak = [];
-            % cfg_peak.plotall         = 1;
-            % cfg_peak.plotthresh      = 0;
-            % cfg_peak.plotbeat        = 1;
-            % cfg_peak.plotcorr        = 0;
-            % cfg_peak.plotfinal       = 1;
-            cfg_peak.corthresh = 0.2;
-            cfg_peak.absPT = 1;
-
             [HeartBeats] = heart_peak_detect(ECG_candidate, EEG.srate, cfg_peak);
             
             meas(i_comp).sk = HeartBeats.sk;
