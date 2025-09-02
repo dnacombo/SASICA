@@ -713,7 +713,7 @@ if cfg.CARACAS.enable
                 NotCardiac(i_comp) = 1;
             end
             meas(i_comp).ku = HeartBeats.ku;
-            if meas(i_comp).ku < cfg.CARACAS.thresh_ku(1) || meas(i_comp).ku > cfg.CARACAS.thresh_ku(2)
+            if meas(i_comp).ku < cfg.CARACAS.thresh_ku
                 NotCardiac(i_comp) = 1;
             end
             PQ_intervals = [HeartBeats.P_time] - [HeartBeats.Q_time];

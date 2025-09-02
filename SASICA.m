@@ -858,9 +858,20 @@ def.FASTER.blinkchanname = [];
 
 def.ADJUST.enable = false;
 
+% Cross-validation Results:
+% Obtained from data of 375 datasets of ds003690
+% see https://github.com/dnacombo/CARACASpaper
+%           thresh_sk    thresh_ku1    thresh_PQ    thresh_RR    thresh_Rampl    thresh_bpm1    thresh_bpm2    TestError
+%           _________    __________    _________    _________    ____________    ___________    ___________    _________
+% Fold_1     1.2537        6.6307       0.93971      0.78321       0.61851         36.606         110.62       0.036849 
+% Fold_2     1.2711        5.6816        0.9779      0.81308       0.63685          36.93         110.15       0.029611 
+% Fold_3     1.2496        6.0129       0.91599      0.79222       0.68877         33.967         117.25       0.042485 
+% Fold_4     1.2536        7.2283       0.90893      0.80535       0.62745         35.272         110.24       0.036728 
+% Fold_5     1.2536        5.7329       0.93425      0.83332       0.65932         36.163          112.7       0.041676 
+% Mean       1.2563        6.2573       0.93536      0.80544       0.64618         35.788         112.19        0.03747 
 def.CARACAS.enable = false;
-def.CARACAS.thresh_sk = 1.35;
-def.CARACAS.thresh_ku = [7 230];
+def.CARACAS.thresh_sk = 1.25;
+def.CARACAS.thresh_ku = 6.25;
 def.CARACAS.thresh_PQ = .9;
 def.CARACAS.thresh_RR = .8;
 def.CARACAS.thresh_Rampl = .6;
