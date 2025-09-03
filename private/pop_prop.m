@@ -280,16 +280,14 @@ for i = 1:numel(computed)
     elseif strcmp(computed{i},'icaCARACAS')
         listprops = [EEG.reject.SASICA.icaCARACAS.sk;
             EEG.reject.SASICA.icaCARACAS.ku;
-            EEG.reject.SASICA.icaCARACAS.PQ;
             EEG.reject.SASICA.icaCARACAS.RR;
             EEG.reject.SASICA.icaCARACAS.Rampl;
             EEG.reject.SASICA.icaCARACAS.bpm;
             EEG.reject.SASICA.icaCARACAS.bpm]';
         str='CARACAS: ';
-        CARACAS_reasons = {'Skewness','Kurtosis','PQ','RR','Rampl','bpm (lo)' 'bpm (hi)'};
+        CARACAS_reasons = {'Skewness','Kurtosis','RR','Rampl','bpm (lo)' 'bpm (hi)'};
         listthreshs = [EEG.reject.SASICA.icaCARACAS(1).cfg.thresh_sk
             EEG.reject.SASICA.icaCARACAS(1).cfg.thresh_ku
-            EEG.reject.SASICA.icaCARACAS(1).cfg.thresh_PQ
             EEG.reject.SASICA.icaCARACAS(1).cfg.thresh_RR
             EEG.reject.SASICA.icaCARACAS(1).cfg.thresh_Rampl
             EEG.reject.SASICA.icaCARACAS(1).cfg.thresh_bpm(1)

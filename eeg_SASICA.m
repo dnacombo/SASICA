@@ -701,7 +701,7 @@ if cfg.CARACAS.enable
 
 
         meas = struct([]);
-        NotCardiac = false(ncomp,6);
+        NotCardiac = false(ncomp,5);
         for i_comp = 1:ncomp
             ECG_candidate = [icaacts(i_comp,:,:) NaN(1,1,size(icaacts,3))];
             ECG_candidate = ECG_candidate(:)';
@@ -716,14 +716,6 @@ if cfg.CARACAS.enable
             if meas(i_comp).ku < cfg.CARACAS.thresh_ku
                 NotCardiac(i_comp,2) = 1;
             end
-            PQ_intervals = [HeartBeats.P_time] - [HeartBeats.Q_time];
-            low_threshold = prctile(PQ_intervals, cfg.CARACAS.prctl_PQ(1)); 
-            high_threshold = prctile(PQ_intervals, cfg.CARACAS.prctl_PQ(2)); 
-            filtered_PQ_intervals = PQ_intervals(PQ_intervals >= low_threshold & PQ_intervals <= high_threshold);
-            meas(i_comp).PQ = std(filtered_PQ_intervals) / abs(mean(filtered_PQ_intervals));
-            if  meas(i_comp).PQ > cfg.CARACAS.thresh_PQ
-                NotCardiac(i_comp,3) = 1;
-            end
 
             RR_intervals = diff([HeartBeats.R_time]);
             low_threshold = prctile(RR_intervals, cfg.CARACAS.prctl_RR(1));
@@ -731,7 +723,7 @@ if cfg.CARACAS.enable
             filtered_RR_intervals = RR_intervals(RR_intervals >= low_threshold & RR_intervals <= high_threshold);
             meas(i_comp).RR = std(filtered_RR_intervals) / mean(filtered_RR_intervals);
             if  meas(i_comp).RR > cfg.CARACAS.thresh_RR
-                NotCardiac(i_comp,4) = 1;
+                NotCardiac(i_comp,3) = 1;
             end
 
             Rampl = abs(ECG_candidate([HeartBeats.R_sample]));
@@ -740,12 +732,12 @@ if cfg.CARACAS.enable
             filtered_Rampl = Rampl(Rampl >= low_threshold & Rampl <= high_threshold);
             meas(i_comp).Rampl = std(filtered_Rampl) / abs(mean(filtered_Rampl));
             if  meas(i_comp).Rampl > cfg.CARACAS.thresh_Rampl
-                NotCardiac(i_comp,5) = 1;
+                NotCardiac(i_comp,4) = 1;
             end
 
             meas(i_comp).bpm = numel(HeartBeats) / ((size(ECG_candidate,2) / EEG.srate  - 0.5) / 60);
             if meas(i_comp).bpm < cfg.CARACAS.thresh_bpm(1) || meas(i_comp).bpm > cfg.CARACAS.thresh_bpm(2)
-                NotCardiac(i_comp,6) = 1;
+                NotCardiac(i_comp,5) = 1;
             end
             meas(i_comp).NotCardiac = NotCardiac(i_comp,:);
         end
