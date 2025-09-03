@@ -724,6 +724,16 @@ function check_chancorr_enable_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of check_chancorr_enable
 check_enable(hObject,handles)
 
+
+% --- Executes on button press in check_chancorr_enable.
+function check_CARACAS_enable_Callback(hObject, eventdata, handles)
+% hObject    handle to check_chancorr_enable (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of check_chancorr_enable
+check_enable(hObject,handles)
+
 % --- Executes on button press in check_resvar_enable.
 function check_resvar_enable_Callback(hObject, eventdata, handles)
 % hObject    handle to check_resvar_enable (see GCBO)
@@ -996,16 +1006,6 @@ elseif isempty(s);
 end
 
 
-% --- Executes on button press in check_MARA_enable.
-function check_MARA_enable_Callback(hObject, eventdata, handles)
-% hObject    handle to check_MARA_enable (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of check_MARA_enable
-check_enable(hObject,handles)
-
-
 % --- Executes on button press in checkNoPlot.
 function checkNoPlot_Callback(hObject, eventdata, handles)
 % hObject    handle to checkNoPlot (see GCBO)
@@ -1027,3 +1027,4 @@ if get(hObject,'Value')
 else
     set(handles.push_ok,'String','Compute')
 end
+

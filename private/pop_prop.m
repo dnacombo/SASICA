@@ -176,7 +176,7 @@ end;
 colors = { [0 .75 .75]      [0 0 1]      [0 .5 0] [.2 .2 .2]};
 % C={[1 0 0],[.6 0 .2],[1 1 0],[0 1 0], [0 1 1]};% colors used in ADJ
 computed = fieldnames(EEG.reject.SASICA);
-computed = computed(regexpcell(computed,'rej|thresh|^var$','inv'));
+computed = computed(regexpcell(computed,'rej|thresh|^var$|_cfg','inv'));
 computedthresh = regexprep(computed,'ica','icathresh');
 computedrej = regexprep(computed,'ica','icarej');
 toPlot = {};
@@ -277,6 +277,46 @@ for i = 1:numel(computed)
             'xtick',1:numel(toPlot{end}),...
             'xticklabel',{'CDN' 'SpRg' 'AvLocSkw' 'lambda' '8-13 Hz' '1/F Fit'}
             };
+    elseif strcmp(computed{i},'icaCARACAS')
+        listprops = [EEG.reject.SASICA.icaCARACAS.sk;
+            EEG.reject.SASICA.icaCARACAS.ku;
+            EEG.reject.SASICA.icaCARACAS.PQ;
+            EEG.reject.SASICA.icaCARACAS.RR;
+            EEG.reject.SASICA.icaCARACAS.Rampl;
+            EEG.reject.SASICA.icaCARACAS.bpm;
+            EEG.reject.SASICA.icaCARACAS.bpm]';
+        str='CARACAS: ';
+        CARACAS_reasons = {'Skewness','Kurtosis','PQ','RR','Rampl','bpm (lo)' 'bpm (hi)'};
+        listthreshs = [EEG.reject.SASICA.icaCARACAS(1).cfg.thresh_sk
+            EEG.reject.SASICA.icaCARACAS(1).cfg.thresh_ku
+            EEG.reject.SASICA.icaCARACAS(1).cfg.thresh_PQ
+            EEG.reject.SASICA.icaCARACAS(1).cfg.thresh_RR
+            EEG.reject.SASICA.icaCARACAS(1).cfg.thresh_Rampl
+            EEG.reject.SASICA.icaCARACAS(1).cfg.thresh_bpm(1)
+            EEG.reject.SASICA.icaCARACAS(1).cfg.thresh_bpm(2)]';
+        listprops = listprops ./ listthreshs;
+        NotCardiac = cat(1,EEG.reject.SASICA.icaCARACAS.NotCardiac);
+        NotCardiac = NotCardiac(chanorcomp,:);
+        NotCardiac(end+1) = NotCardiac(end);
+        reasons = CARACAS_reasons(NotCardiac);
+        if isempty(reasons)
+            str = [str 'Cardiac'];
+        else
+            str = [str ['Not Cardiac because ' reasons{:}]];
+        end
+        CARACASis = str;
+        toPlot{end+1} = {};
+        for ip = 1:numel(listprops(chanorcomp,:))
+            toPlot{end}{ip} = listprops(chanorcomp,ip);
+            barcolors(ip,:) = ifelse(NotCardiac(ip),colors{4},colors{3});
+        end
+        toPlot_title{end+1} = CARACASis;
+        toPlot_axprops{end+1} = {'ColorOrder' barcolors,...
+            'ylim' [0 2],...
+            'ytick' [1 2],...
+            'yticklabel' {'Th' '2*Th'},...
+            'xtick',1:numel(toPlot{end}),...
+            'xticklabel',CARACAS_reasons}; 
     else
         rejfields = {
             'icaautocorr'       'LoAC'   colors{2}
