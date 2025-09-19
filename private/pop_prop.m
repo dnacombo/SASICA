@@ -93,7 +93,7 @@ if EEG.trials > 1
     if EEG.trials < 6
         ei_smooth = 1;
     else
-        ei_smooth = 3;
+        ei_smooth = 1;
     end
     icaacttmp = eeg_getdatact(EEG, 'component', chanorcomp);
     offset = nan_mean(icaacttmp(:));
