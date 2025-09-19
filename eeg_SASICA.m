@@ -803,10 +803,10 @@ if ~noplotselectcomps
             set(okbutt,'callback','uiresume(findobj(''-regexp'',''name'', ''SASICA 1$''));');
             % find the cancel button and change its callback fcn
             cancelbutt = findobj(hfig(ifig),'string','Cancel');
-            closecallback = ['tmpEEG = get(findobj(''-regexp'',''name'', ''SASICA 1$''),''userdata'');tmpEEG.reject.gcompreject = false(size(tmpEEG.reject.gcompreject));disp(''Operation cancelled. No component is selected for rejection.'');set(findobj(''-regexp'',''name'', ''SASICA 1$''),''userdata'',tmpEEG);clear tmpEEG;'...
-                'uiresume(gcf);'];
+            closecallback = ['hfig1 = findobj(''-regexp'',''name'', ''SASICA 1$'');tmpEEG = get(hfig1,''userdata'');tmpEEG.reject.gcompreject = false(size(tmpEEG.reject.gcompreject));disp(''Operation cancelled. No component is selected for rejection.'');set(hfig1,''userdata'',tmpEEG);clear tmpEEG;'...
+                'uiresume(hfig1);clear hfig1;'];
             set(cancelbutt,'callback',closecallback );
-            set(hfig(ifig),'closerequestfcn','disp(''Operation cancelled. No component is selected for rejection.''); delete(findobj(''-regexp'',''name'',''pop_selectcomps.* -- SASICA''));')
+            set(hfig(ifig),'closerequestfcn',closecallback)
             % crazy thing to find and order the axes for the topos.
             ax{ifig} = findobj(hfig(ifig),'type','Axes');
             ax{ifig} = ax{ifig}(end-1:-1:1);% erase pointer to the big axis behind all others and reorder the axes handles.
@@ -870,7 +870,7 @@ if ~noplotselectcomps
         if ishandle(hfig(1))
             EEG = get(hfig(1),'userdata');
         else
-            EEG = struct('reject',struct('gcompreject',[]));
+            EEG.reject.gcompreject = [];
         end
         delete(findobj('-regexp','name','pop_selectcomps.* -- SASICA'));
         delete(findobj('-regexp','name','Automatic component rejection measures'));
