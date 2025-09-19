@@ -90,7 +90,7 @@ if EEG.trials > 1
     % put title at top of erpimage
     axis off
     EEG.times = linspace(EEG.xmin, EEG.xmax, EEG.pnts);
-    if EEG.trials < 6
+    if EEG.trials < 100 || isfield(EEG.reject.SASICA,'icaCARACAS') && EEG.reject.SASICA.icaCARACAS(1).cfg.enable
         ei_smooth = 1;
     else
         ei_smooth = 3;
