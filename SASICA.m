@@ -873,20 +873,20 @@ def.ADJUST.enable = false;
 % Cross-validation Results:
 % Obtained from data of 375 datasets of ds003690
 % see https://github.com/dnacombo/CARACASpaper
-%               thresh_sk    thresh_ku1    thresh_RR    thresh_Rampl    thresh_bpm1    thresh_bpm2    TestError
-%               _________    __________    _________    ____________    ___________    ___________    _________
-%     Fold_1     1.2414        5.8385       0.82714       0.63851         34.322         109.87       0.025509 
-%     Fold_2      1.271        5.6442       0.75191       0.64003         36.802         108.06       0.040632 
-%     Fold_3       1.25        6.3672           0.8         0.615         35.219            110       0.038201 
-%     Fold_4     1.2438        5.9893       0.81449       0.63744         36.128         107.07       0.032909 
-%     Fold_5     1.2397        6.0833       0.81359       0.61019         35.594         111.87       0.024949 
-%     Mean       1.2492        5.9845       0.80143       0.62823         35.613         109.37        0.03244 
+%          thresh_sk    thresh_ku1    thresh_RR    thresh_Rampl    thresh_bpm1    thresh_bpm2    TestError
+%           _________    __________    _________    ____________    ___________    ___________    _________
+% Fold_1     1.1167        4.6462       0.30849       0.27196         33.907         100.58       0.030521 
+% Fold_2      1.072        5.1674       0.31103       0.26517         33.208         99.858       0.019544 
+% Fold_3     1.0403        5.3151       0.31285        0.2376         35.633         101.02       0.049319 
+% Fold_4     1.0733        5.3368        0.3113       0.26617         33.943         100.99        0.02025 
+% Fold_5     1.0414        4.9498       0.31191       0.26199         36.506         99.266       0.036167 
+% Mean       1.0688        5.0831       0.31112       0.26058          34.64         100.34        0.03116 
 def.CARACAS.enable = false;
-def.CARACAS.thresh_sk = 1.25;
-def.CARACAS.thresh_ku = 6;
-def.CARACAS.thresh_RR = .8;
-def.CARACAS.thresh_Rampl = .6;
-def.CARACAS.thresh_bpm = [35 110];
+def.CARACAS.thresh_sk = 1.1;
+def.CARACAS.thresh_ku = 5.1;
+def.CARACAS.thresh_RR = 0.31;
+def.CARACAS.thresh_Rampl = .26;
+def.CARACAS.thresh_bpm = [35 100];
 def.CARACAS.prctl_RR = [0 70];
 def.CARACAS.prctl_Rampl = [15 85];
 def.CARACAS.cfg_peak.corthresh = .2;
