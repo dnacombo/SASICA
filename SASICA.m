@@ -608,7 +608,9 @@ catch ME
     disp(['This is ' eegplugin_SASICA])
     disp(['This is MATLAB ' version])
     disp(['Running on ' computer])
-    dispstruct(cfg)
+    try
+        dispstruct(cfg)
+    end
     rethrow(ME)
 end
 setpref('SASICA','cfg',cfg);
