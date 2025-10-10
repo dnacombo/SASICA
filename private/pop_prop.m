@@ -61,7 +61,7 @@ catch,
 end;
 basename = ['Component ' int2str(chanorcomp) ];
 
-fh = figure('name', ['pop_prop() - ' basename ' properties'], 'color', BACKCOLOR, 'numbertitle', 'off', 'visible', 'on');
+fh = figure('name', ['pop_prop() - ' basename ' properties -- SASICA'], 'color', BACKCOLOR, 'numbertitle', 'off', 'visible', 'on');
 pos = get(gcf,'position');
 set(gcf,'Position', [pos(1) pos(2)-700+pos(4) 500 700], 'visible', 'on');
 pos = get(gca,'position'); % plot relative to current axes
@@ -292,21 +292,38 @@ for i = 1:numel(computed)
             EEG.reject.SASICA.icaCARACAS(1).cfg.thresh_Rampl
             EEG.reject.SASICA.icaCARACAS(1).cfg.thresh_bpm(1)
             EEG.reject.SASICA.icaCARACAS(1).cfg.thresh_bpm(2)]';
-        listprops = listprops ./ listthreshs;
+        % sk
+        minprops(1) = min(listprops(:,1));
+        listprops(:,1) = 1./(listprops(:,1) - minprops(1));
+        listthreshs(1) = 1./(listthreshs(1) - minprops(1));
+        % ku
+        minprops(2) = min(listprops(:,2));
+        listprops(:,2) = 1./(listprops(:,2) - minprops(2));
+        listthreshs(2) = 1./(listthreshs(2) - minprops(2));
+        % RR
+        listprops(:,3) = listprops(:,3) ./ listthreshs(3);
+        % Rampl
+        listprops(:,4) = listprops(:,4) ./ listthreshs(4);
+        % bpm (lo)
+        minprops(5) = min(listprops(:,5));
+        listprops(:,5) = 1./(listprops(:,5) - minprops(5));
+        listthreshs(5) = 1./(listthreshs(5) - minprops(5));
+        % bpm (hi)
+        listprops(:,6) = listprops(:,6) ./ listthreshs(6);
+
         NotCardiac = cat(1,EEG.reject.SASICA.icaCARACAS.NotCardiac);
-        NotCardiac = NotCardiac(chanorcomp,:);
-        NotCardiac(end+1) = NotCardiac(end);
-        reasons = CARACAS_reasons(NotCardiac);
+        NotCardiac(:,end+1) = NotCardiac(:,end);
+        reasons = CARACAS_reasons(NotCardiac(chanorcomp,:));
         if isempty(reasons)
             str = [str 'Cardiac'];
         else
-            str = [str ['Not Cardiac because ' reasons{:}]];
+            str = [str ['Not Cardiac because ' strjoin(reasons,' ')]];
         end
         CARACASis = str;
         toPlot{end+1} = {};
-        for ip = 1:numel(listprops(chanorcomp,:))
+        for ip = 1:size(listprops,2)
             toPlot{end}{ip} = listprops(chanorcomp,ip);
-            barcolors(ip,:) = ifelse(NotCardiac(ip),colors{4},colors{3});
+            barcolors(ip,:) = ifelse(NotCardiac(chanorcomp,ip),colors{4},colors{3});
         end
         toPlot_title{end+1} = CARACASis;
         toPlot_axprops{end+1} = {'ColorOrder' barcolors,...
