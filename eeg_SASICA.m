@@ -89,6 +89,10 @@ if ischar(cfg) && strncmp(cfg,'pop_',4)
         set(findobj('-regexp','name', 'SASICA 1$'),'userdata',tmpEEG);
         clear tmpEEG
     catch ME
+        delete(findobj('-regexp','name','pop_selectcomps.* -- SASICA'));
+        delete(findobj('-regexp','name','pop_prop.* -- SASICA'));
+        delete(findobj('-regexp','name','Automatic component rejection measures'));
+
         disp('================================');
         disp('================================');
         disp('ERROR. Please send the entire error message below to max.chaumon@gmail.com. Thanks for your help!');
