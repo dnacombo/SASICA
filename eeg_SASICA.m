@@ -709,9 +709,40 @@ if cfg.CARACAS.enable
         for i_comp = 1:ncomp
             ECG_candidate = [icaacts(i_comp,:,:) NaN(1,1,size(icaacts,3))];
             ECG_candidate = ECG_candidate(:)';
+            ft_warning('off','FieldTrip:dataContainsNaN');
 
             [HeartBeats] = heart_peak_detect(ECG_candidate, EEG.srate, cfg_peak);
             
+            ft_warning('on','FieldTrip:dataContainsNaN')
+
+            %%
+            R_idx = [HeartBeats.R_sample];
+            if isempty(R_idx)
+                Rpeaks = NaN;
+            else
+                Rpeaks = median(abs(ECG_candidate(R_idx)),'omitmissing');
+            end
+
+            PeaktoNoiseDelay = 50; % in ms
+            PeaktoNoiseDelaySamp = round(PeaktoNoiseDelay / 1000 * EEG.srate);
+
+            RNoiseVals = [];
+            if numel(R_idx) >= 2
+                idx_starts = R_idx(1:end-1) + PeaktoNoiseDelaySamp;
+                idx_ends   = R_idx(2:end)   - PeaktoNoiseDelaySamp;
+                % keep only valid ranges within signal and with start<end
+                idx_starts = max(1, idx_starts);
+                idx_ends   = min(numel(ECG_candidate), idx_ends);
+                valid = idx_ends > idx_starts;
+                for id = find(valid)
+                    RNoiseVals = [RNoiseVals ECG_candidate(idx_starts(id):idx_ends(id))]; %#ok<AGROW>
+                end
+            end
+            
+            RNoise = median(abs(RNoiseVals), 'omitmissing');
+
+            meas(i_comp).RPeakstoNoise = Rpeaks / RNoise;
+%%
             meas(i_comp).sk = HeartBeats.sk;
             if meas(i_comp).sk < cfg.CARACAS.thresh_sk
                 NotCardiac(i_comp,1) = 1;

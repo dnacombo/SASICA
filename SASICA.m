@@ -882,6 +882,7 @@ def.ADJUST.enable = false;
 % Fold_5     1.0414        4.9498       0.31191       0.26199         36.506         99.266       0.036167 
 % Mean       1.0688        5.0831       0.31112       0.26058          34.64         100.34        0.03116 
 def.CARACAS.enable = false;
+def.CARACAS.thresh_RPeakstoNoise = 10;
 def.CARACAS.thresh_sk = 1.1;
 def.CARACAS.thresh_ku = 5.1;
 def.CARACAS.thresh_RR = 0.31;
