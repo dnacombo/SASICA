@@ -707,7 +707,7 @@ if cfg.CARACAS.enable
         meas = struct([]);
         NotCardiac = false(ncomp,5);
         for i_comp = 1:ncomp
-            ECG_candidate = [icaacts(i_comp,:,:) NaN(1,1,size(icaacts,3))];
+            ECG_candidate = [icaacts(i_comp,:,:) NaN(1,1100,size(icaacts,3))];
             ECG_candidate = ECG_candidate(:)';
             ft_warning('off','FieldTrip:dataContainsNaN');
 
@@ -770,7 +770,7 @@ if cfg.CARACAS.enable
                 NotCardiac(i_comp,4) = 1;
             end
 
-            meas(i_comp).bpm = numel(HeartBeats) / ((size(ECG_candidate,2) / EEG.srate  - 0.5) / 60);
+            meas(i_comp).bpm = numel(HeartBeats) / (sum(~isnan(ECG_candidate) / EEG.srate) / 60);
             if meas(i_comp).bpm < cfg.CARACAS.thresh_bpm(1) || meas(i_comp).bpm > cfg.CARACAS.thresh_bpm(2)
                 NotCardiac(i_comp,5) = 1;
             end
