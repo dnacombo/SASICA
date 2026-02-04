@@ -881,19 +881,29 @@ def.ADJUST.enable = false;
 % Fold_4     1.0733        5.3368        0.3113       0.26617         33.943         100.99        0.02025 
 % Fold_5     1.0414        4.9498       0.31191       0.26199         36.506         99.266       0.036167 
 % Mean       1.0688        5.0831       0.31112       0.26058          34.64         100.34        0.03116 
-def.CARACAS.enable = false;
-def.CARACAS.thresh_RPeakstoNoise = 10;
-def.CARACAS.thresh_sk = 1.1;
-def.CARACAS.thresh_ku = 5.1;
+% Cross-validation Results:
+%               thresh_RPeakstoNoise    thresh_sk    thresh_ku    thresh_RR    thresh_Rampl    thresh_bpm1    thresh_bpm2    TestError
+%               ____________________    _________    _________    _________    ____________    ___________    ___________    _________
+%     Fold_1           3.6371            1.2658       4.7628       0.30318       0.28423         35.121         98.822       0.030865 
+%     Fold_2           1.4258            1.4631       4.4716       0.31286       0.33512         36.054         105.52       0.024538 
+%     Fold_3           3.5583            1.2651       5.4375       0.32003       0.27158         34.711         94.931       0.038997 
+%     Fold_4           3.6602            1.2085       5.2996       0.31884       0.26415         33.912         100.22       0.021318 
+%     Fold_5           4.4185            1.2041         5.07       0.31233       0.26236          36.28         89.721       0.040451 
+%     Mean               3.34            1.2813       5.0083       0.31345       0.28349         35.216         97.843       0.031234 
+
+    def.CARACAS.enable = false;
+def.CARACAS.thresh_RPeakstoNoise = 3.3;
+def.CARACAS.thresh_sk = 1.3;
+def.CARACAS.thresh_ku = 5.0;
 def.CARACAS.thresh_RR = 0.31;
-def.CARACAS.thresh_Rampl = .26;
-def.CARACAS.thresh_bpm = [35 100];
+def.CARACAS.thresh_Rampl = .28;
+def.CARACAS.thresh_bpm = [35 98];
 def.CARACAS.prctl_RR = [0 70];
 def.CARACAS.prctl_Rampl = [15 85];
 def.CARACAS.cfg_peak.corthresh = .2;
-def.CARACAS.cfg_peak.absPT = 1;
-def.CARACAS.cfg_peak.abstemplate = 1;
-def.CARACAS.cfg_peak.NaNST = 1;
+def.CARACAS.cfg_peak.absPT = 0;
+def.CARACAS.cfg_peak.abstemplate = 0;
+def.CARACAS.cfg_peak.NaNST = 0;
 
 def.opts.FontSize = 14;
 def.opts.noplot = 0;
