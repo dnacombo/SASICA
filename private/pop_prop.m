@@ -447,7 +447,7 @@ for i = 1:numel(rows)
         end
         % Fit font size to axis width/height using measured extents
         padx = 0.01; % normalized inter-column padding
-        leftMargin = 0.01; rightMargin = 0.01; topMargin = 0.02; bottomMargin = 0.02;
+        leftMargin = 0.00; rightMargin = 0.0; topMargin = 0.02; bottomMargin = 0.02;
         availW = 1 - leftMargin - rightMargin;
         availH = 1 - topMargin - bottomMargin;
         fontsize = 10; minsize = 7;
