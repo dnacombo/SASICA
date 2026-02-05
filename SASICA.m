@@ -873,31 +873,22 @@ def.ADJUST.enable = false;
 % Cross-validation Results:
 % Obtained from data of 375 datasets of ds003690
 % see https://github.com/dnacombo/CARACASpaper
-%          thresh_sk    thresh_ku1    thresh_RR    thresh_Rampl    thresh_bpm1    thresh_bpm2    TestError
-%           _________    __________    _________    ____________    ___________    ___________    _________
-% Fold_1     1.1167        4.6462       0.30849       0.27196         33.907         100.58       0.030521 
-% Fold_2      1.072        5.1674       0.31103       0.26517         33.208         99.858       0.019544 
-% Fold_3     1.0403        5.3151       0.31285        0.2376         35.633         101.02       0.049319 
-% Fold_4     1.0733        5.3368        0.3113       0.26617         33.943         100.99        0.02025 
-% Fold_5     1.0414        4.9498       0.31191       0.26199         36.506         99.266       0.036167 
-% Mean       1.0688        5.0831       0.31112       0.26058          34.64         100.34        0.03116 
 % Cross-validation Results:
-%               thresh_RPeakstoNoise    thresh_sk    thresh_ku    thresh_RR    thresh_Rampl    thresh_bpm1    thresh_bpm2    TestError
-%               ____________________    _________    _________    _________    ____________    ___________    ___________    _________
-%     Fold_1           3.6371            1.2658       4.7628       0.30318       0.28423         35.121         98.822       0.030865 
-%     Fold_2           1.4258            1.4631       4.4716       0.31286       0.33512         36.054         105.52       0.024538 
-%     Fold_3           3.5583            1.2651       5.4375       0.32003       0.27158         34.711         94.931       0.038997 
-%     Fold_4           3.6602            1.2085       5.2996       0.31884       0.26415         33.912         100.22       0.021318 
-%     Fold_5           4.4185            1.2041         5.07       0.31233       0.26236          36.28         89.721       0.040451 
-%     Mean               3.34            1.2813       5.0083       0.31345       0.28349         35.216         97.843       0.031234 
+%               thresh_sk    thresh_ku1    thresh_RR    thresh_Rampl    thresh_bpm1    thresh_bpm2    TestError
+%               _________    __________    _________    ____________    ___________    ___________    _________
+%     Fold_1     1.3621        4.9673       0.30325        0.2714         35.617         99.303       0.029441 
+%     Fold_2     1.4645        5.0274       0.31367       0.26121         32.567         95.874       0.024168 
+%     Fold_3      1.427        5.0785       0.31288       0.26826         34.552         98.454       0.035973 
+%     Fold_4     1.4283        5.3839       0.31436       0.27078          31.22         95.667       0.018251 
+%     Fold_5     1.3647        5.0437       0.30406       0.27507         36.626         97.572       0.033696 
+%     Mean       1.4093        5.1002       0.30964       0.26935         34.116         97.374       0.028306 
 
-    def.CARACAS.enable = false;
-def.CARACAS.thresh_RPeakstoNoise = 3.3;
-def.CARACAS.thresh_sk = 1.3;
-def.CARACAS.thresh_ku = 5.0;
+def.CARACAS.enable = false;
+def.CARACAS.thresh_sk = 1.4;
+def.CARACAS.thresh_ku = 5.1;
 def.CARACAS.thresh_RR = 0.31;
-def.CARACAS.thresh_Rampl = .28;
-def.CARACAS.thresh_bpm = [35 98];
+def.CARACAS.thresh_Rampl = .27;
+def.CARACAS.thresh_bpm = [34 97];
 def.CARACAS.prctl_RR = [0 70];
 def.CARACAS.prctl_Rampl = [15 85];
 def.CARACAS.cfg_peak.corthresh = .2;
