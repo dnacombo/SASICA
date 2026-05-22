@@ -1,11 +1,13 @@
 This is SASICA, a tool to help you reject/select independent components based on various properties of these components.
 
-This is a pre-release of the FieldTrip compatible version of SASICA (originally for EEGLAB). Please report any bug to max.chaumon@gmail.com
+This version should be compatible with the FieldTrip toolbox. Please report any bug to max.chaumon@gmail.com
 
 # Install:
-In your favorite directory with `git clone -b feature/ft_compat https://github.com/dnacombo/SASICA.git`
+In your favorite directory with `git clone --recurse-submodules https://github.com/dnacombo/SASICA.git`
 or download the zip file [here](https://github.com/dnacombo/SASICA.git) and uncompress in your favorite directory.
 Then in MATLAB: `addpath('your/favorite/directory')`
+
+The toolbox is also available as a plugin to EEGLAB, which can be installed from EEGLAB's plugin/extension system.
 
 
 # Usage:
