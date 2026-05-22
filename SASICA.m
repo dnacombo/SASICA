@@ -41,6 +41,13 @@
 %                               Thresholding for EEG artifact Rejection.
 %                               Journal of Neuroscience Methods, 192(1),
 %                               152Ã¢ÂÂ162. doi:16/j.jneumeth.2010.07.015)
+%              CARACAS selection: detects cardiac artifact components
+%                               without requiring an ECG recording. Runs PQRST 
+%                               peak detection on each IC timecourse and flags
+%                               components whose peaks show physiologically 
+%                               implausible skewness, kurtosis, RR-interval 
+%                               regularity, R-amplitude consistency, and heart
+%                               rate (bpm) as *non cardiac*.
 %
 %   >> [EEG com] = SASICA( [], 'key', 'val');
 %       Takes optional key val pairs to set specific options from the
@@ -608,7 +615,9 @@ catch ME
     disp(['This is ' eegplugin_SASICA])
     disp(['This is MATLAB ' version])
     disp(['Running on ' computer])
-    dispstruct(cfg)
+    try
+        dispstruct(cfg)
+    end
     rethrow(ME)
 end
 setpref('SASICA','cfg',cfg);
@@ -717,6 +726,16 @@ check_enable(hObject,handles)
 
 % --- Executes on button press in check_chancorr_enable.
 function check_chancorr_enable_Callback(hObject, eventdata, handles)
+% hObject    handle to check_chancorr_enable (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of check_chancorr_enable
+check_enable(hObject,handles)
+
+
+% --- Executes on button press in check_chancorr_enable.
+function check_CARACAS_enable_Callback(hObject, eventdata, handles)
 % hObject    handle to check_chancorr_enable (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -858,6 +877,19 @@ def.FASTER.blinkchanname = [];
 
 def.ADJUST.enable = false;
 
+def.CARACAS.enable = false;
+def.CARACAS.thresh_sk = 1.0;
+def.CARACAS.thresh_ku = 5.3;
+def.CARACAS.thresh_RR = 0.31;
+def.CARACAS.thresh_Rampl = .23;
+def.CARACAS.thresh_bpm = [34 97];
+def.CARACAS.prctl_RR = [0 70];
+def.CARACAS.prctl_Rampl = [15 85];
+def.CARACAS.cfg_peak.corthresh = .2;
+def.CARACAS.cfg_peak.absPT = 0;
+def.CARACAS.cfg_peak.abstemplate = 0;
+def.CARACAS.cfg_peak.NaNST = 0;
+
 def.opts.FontSize = 14;
 def.opts.noplot = 0;
 def.opts.noplotselectcomps = 0;
@@ -970,16 +1002,6 @@ elseif isempty(s);
 end
 
 
-% --- Executes on button press in check_MARA_enable.
-function check_MARA_enable_Callback(hObject, eventdata, handles)
-% hObject    handle to check_MARA_enable (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hint: get(hObject,'Value') returns toggle state of check_MARA_enable
-check_enable(hObject,handles)
-
-
 % --- Executes on button press in checkNoPlot.
 function checkNoPlot_Callback(hObject, eventdata, handles)
 % hObject    handle to checkNoPlot (see GCBO)
@@ -1001,3 +1023,4 @@ if get(hObject,'Value')
 else
     set(handles.push_ok,'String','Compute')
 end
+

@@ -67,7 +67,19 @@ if ischar(cfg)
     return
 end
     
-% create a minimal EEG structure to pass to eeg_SASICA.
+[EEG,cfg] = comp2eeglab(comp,cfg,data);
+
+EEG = eeg_SASICA(EEG,cfg);
+
+
+cfg.reject = EEG.reject;
+
+end
+
+function [EEG,cfg] = comp2eeglab(cfg,comp,data)
+
+% create an EEG structure based on comp.
+
 EEG = eeg_emptyset;
 EEG.setname = 'internal';
 EEG.nbchan = numel(comp.topolabel);
@@ -80,7 +92,7 @@ EEG.srate = comp.fsample;
 EEG.xmin = comp.time{1}(1);
 EEG.xmax = comp.time{end}(end);
 EEG.times = comp.time{1}*1000;
-if numel(unique(cellfun(@(x) size(x,2),comp.trial))) == 1
+if isscalar(unique(cellfun(@(x) size(x,2),comp.trial)))
     EEG.icaact = cat(3,comp.trial{:});
 else
     warning('Trials have unequal length. Catenating for display')
@@ -132,7 +144,7 @@ EEG.chaninfo.nosedir = '+Y';
 if not(exist('data','var'))
     EEG.data = reshape(EEG.icawinv * EEG.icaact(:,:),EEG.nbchan,EEG.pnts,EEG.trials);
 else
-    if numel(unique(cellfun(@(x) size(x,2),comp.trial))) == 1
+    if isscalar(unique(cellfun(@(x) size(x,2),comp.trial)))
         EEG.data = cat(3,data.trial{:});
     else
         EEG.data = cat(2,data.trial{:});
@@ -145,10 +157,4 @@ EEG.icachansind = 1:size(EEG.data,1);
 if isfield(cfg,'reject')
     EEG.reject = cfg.reject;
 end
-
-EEG = eeg_SASICA(EEG,cfg);
-
-
-cfg.reject = EEG.reject;
-
-
+end

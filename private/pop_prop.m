@@ -61,7 +61,7 @@ catch,
 end;
 basename = ['Component ' int2str(chanorcomp) ];
 
-fh = figure('name', ['pop_prop() - ' basename ' properties'], 'color', BACKCOLOR, 'numbertitle', 'off', 'visible', 'on');
+fh = figure('name', ['pop_prop() - ' basename ' properties -- SASICA'], 'color', BACKCOLOR, 'numbertitle', 'off', 'visible', 'on');
 pos = get(gcf,'position');
 set(gcf,'Position', [pos(1) pos(2)-700+pos(4) 500 700], 'visible', 'on');
 pos = get(gca,'position'); % plot relative to current axes
@@ -90,7 +90,7 @@ if EEG.trials > 1
     % put title at top of erpimage
     axis off
     EEG.times = linspace(EEG.xmin, EEG.xmax, EEG.pnts);
-    if EEG.trials < 6
+    if EEG.trials < 100 || isfield(EEG.reject.SASICA,'icaCARACAS') && EEG.reject.SASICA.icaCARACAS(1).cfg.enable
         ei_smooth = 1;
     else
         ei_smooth = 3;
@@ -176,22 +176,29 @@ end;
 colors = { [0 .75 .75]      [0 0 1]      [0 .5 0] [.2 .2 .2]};
 % C={[1 0 0],[.6 0 .2],[1 1 0],[0 1 0], [0 1 1]};% colors used in ADJ
 computed = fieldnames(EEG.reject.SASICA);
-computed = computed(regexpcell(computed,'rej|thresh|^var$','inv'));
+computed = computed(regexpcell(computed,'rej|thresh|^var$|_cfg','inv'));
 computedthresh = regexprep(computed,'ica','icathresh');
 computedrej = regexprep(computed,'ica','icarej');
-toPlot = {};
-toPlot_axprops = {};
-toPlot_title = {}; SXticks = {};co = [];
+% Unified rows description: one entry per row to render
+% Each row has fields: mode ('bar'|'text'), title (char), axprops (cell), content (cell)
+rows = struct('mode',{},'title',{},'axprops',{},'content',{});
+% Aggregated SASICA summary row builders
+SXticks = {}; co = [];
+sasica_values = {};
+sasica_axprops = {};
+sasica_title = 'SASICA';
+sasica_has = false;
 for i = 1:numel(computed)
     if strcmp(computed{i},'icaADJUST')
         struct2ws(EEG.reject.SASICA.icaADJUST)
-        toPlot{end+1}{1} = (SAD(chanorcomp)-med2_SAD)/(soglia_SAD-med2_SAD);
-        toPlot{end}{2} = (SED(chanorcomp)-med2_SED)/(soglia_SED-med2_SED);
-        toPlot{end}{3} = (GDSF(chanorcomp)-med2_GDSF)/(soglia_GDSF-med2_GDSF);
-        toPlot{end}{4} = (nuovaV(chanorcomp)-med2_V)/(soglia_V-med2_V);
-        toPlot{end}{5} = (meanK(chanorcomp)-med2_K)/(soglia_K-med2_K);
+    vals = {};
+    vals{end+1} = (SAD(chanorcomp)-med2_SAD)/(soglia_SAD-med2_SAD);
+    vals{end+1} = (SED(chanorcomp)-med2_SED)/(soglia_SED-med2_SED);
+    vals{end+1} = (GDSF(chanorcomp)-med2_GDSF)/(soglia_GDSF-med2_GDSF);
+    vals{end+1} = (nuovaV(chanorcomp)-med2_V)/(soglia_V-med2_V);
+    vals{end+1} = (meanK(chanorcomp)-med2_K)/(soglia_K-med2_K);
         ADJis = '';
-        aco = repmat(colors{4},numel(toPlot{end}),1);
+    aco = repmat(colors{4},numel(vals),1);
         if ismember(chanorcomp,horiz)
             ADJis = [ADJis 'HEM/'];
             aco([2 4],:) = repmat(colors{1},2,1);
@@ -213,13 +220,15 @@ for i = 1:numel(computed)
         else
             ADJis(end) = [];
         end
-        toPlot_title{end+1} = ['ADJUST: ' ADJis];
-        toPlot_axprops{end+1} = {'ColorOrder' aco,...
-            'ylim' [0 2],...
-            'ytick' [1 2],...
-            'yticklabel' {'Th' '2*Th'},...
-            'xtick' 1:numel(toPlot{end}),...
-            'xticklabel' {'SAD' 'SED' 'GDSF' 'MEV' 'TK'}};
+        rows(end+1) = struct('mode','bar', ...
+            'title',['ADJUST: ' ADJis], ...
+            'axprops',{{'ColorOrder' aco, ...
+            'ylim' [0 2], ...
+            'ytick' [1 2], ...
+            'yticklabel' {'Th' '2*Th'}, ...
+            'xtick' 1:numel(vals), ...
+            'xticklabel' {'SAD' 'SED' 'GDSF' 'MEV' 'TK'}}}, ...
+            'content',{vals});
     elseif strcmp(computed{i},'icaFASTER')
         listprops = EEG.reject.SASICA.icaFASTER.listprops;
         str='FASTER: ';
@@ -230,8 +239,8 @@ for i = 1:numel(computed)
         %                     4 Hurst exponent
         %                     5 Eyeblink correlations
         zlist = zscore(listprops);
-        for i = 1:size(listprops,2)
-            fst(:,i) = min_z(listprops(:,i));
+        for k = 1:size(listprops,2)
+            fst(:,k) = min_z(listprops(:,k));
         end
         reasons = FASTER_reasons(fst(chanorcomp,:));
         if isempty(reasons)
@@ -240,17 +249,19 @@ for i = 1:numel(computed)
             str = [str reasons{:}];
         end
         FSTis = str;
-        toPlot{end+1} = {};
+        vals = {};
         for ip = 1:numel(zlist(chanorcomp,:))
-            toPlot{end}{ip} = abs(zlist(chanorcomp,ip))/3;% normalized by threshold
+            vals{ip} = abs(zlist(chanorcomp,ip))/3; % normalized by threshold
         end
-        toPlot_title{end+1} = FSTis;
-        toPlot_axprops{end+1} = {'ColorOrder' [colors{2};colors{2};colors{3};colors{2};colors{1}],...
-            'ylim' [0 2],...
-            'ytick' [1 2],...
-            'yticklabel' {'Th' '2*Th'},...
-            'xtick',1:numel(toPlot{end}),...
-            'xticklabel',{'MedGrad' 'SpecSl' 'SK' 'HE' 'EOGCorr'}};
+        rows(end+1) = struct('mode','bar', ...
+            'title',FSTis, ...
+            'axprops',{{'ColorOrder' [colors{2};colors{2};colors{3};colors{2};colors{1}], ...
+            'ylim' [0 2], ...
+            'ytick' [1 2], ...
+            'yticklabel' {'Th' '2*Th'}, ...
+            'xtick',1:numel(vals), ...
+            'xticklabel',{'MedGrad' 'SpecSl' 'SK' 'HE' 'EOGCorr'}}}, ...
+            'content',{vals});
     elseif strcmp(computed{i},'icaMARA')
         info = EEG.reject.SASICA.icaMARA.info;
         str='MARA: ';
@@ -267,16 +278,52 @@ for i = 1:numel(computed)
             str = [str 'Reject    '];
         end
         MARAis = [str '(' num2str(round(100*info.posterior_artefactprob(chanorcomp)),'%g') '%)'];
-        toPlot{end+1} = {};
+        vals = {};
         for ip = 1:numel(info.normfeats(:,chanorcomp))
-            toPlot{end}{ip} = info.normfeats(ip,chanorcomp) ;
+            vals{ip} = info.normfeats(ip,chanorcomp);
         end
-        toPlot_title{end+1} = MARAis;
-        toPlot_axprops{end+1} = {'ColorOrder' repmat(colors{4},numel(MARA_meas),1),...
-            'ylimmode' 'auto',...
-            'xtick',1:numel(toPlot{end}),...
-            'xticklabel',{'CDN' 'SpRg' 'AvLocSkw' 'lambda' '8-13 Hz' '1/F Fit'}
-            };
+        rows(end+1) = struct('mode','bar', ...
+            'title',MARAis, ...
+            'axprops',{{'ColorOrder' repmat(colors{4},numel(MARA_meas),1), ...
+            'ylimmode' 'auto', ...
+            'xtick',1:numel(vals), ...
+            'xticklabel',{'CDN' 'SpRg' 'AvLocSkw' 'lambda' '8-13 Hz' '1/F Fit'}}}, ...
+            'content',{vals});
+    elseif strcmp(computed{i},'icaCARACAS')
+        listprops = [EEG.reject.SASICA.icaCARACAS.sk;
+            EEG.reject.SASICA.icaCARACAS.ku;
+            EEG.reject.SASICA.icaCARACAS.RR;
+            EEG.reject.SASICA.icaCARACAS.Rampl;
+            EEG.reject.SASICA.icaCARACAS.bpm;
+            EEG.reject.SASICA.icaCARACAS.bpm]';
+        str='CARACAS: ';
+        CARACAS_reasons = {'Skewness','Kurtosis','RR','Rampl','bpm (lo)' 'bpm (hi)'};
+        % thresholds not used in text rendering; left here for reference
+        Q = quantile(listprops,[0 .05 .5 .95 1],1);
+
+        NotCardiac = cat(1,EEG.reject.SASICA.icaCARACAS.NotCardiac);
+        NotCardiac(:,end+1) = NotCardiac(:,end);
+        reasons = CARACAS_reasons(NotCardiac(chanorcomp,:));
+        if isempty(reasons)
+            str = [str 'Cardiac'];
+        else
+            str = [str ['Not Cardiac because ' strjoin(reasons,' ')]];
+        end
+        CARACASis = str;
+    % Build grid content (zero font dependency): labels + headers + numeric matrix
+    grid.headers = CARACAS_reasons;              % 1 x 6
+    % Insert separator and thresholds rows before Measured
+    cfg = EEG.reject.SASICA.icaCARACAS(1).cfg;
+    thr = [cfg.thresh_sk cfg.thresh_ku cfg.thresh_RR cfg.thresh_Rampl cfg.thresh_bpm(1) cfg.thresh_bpm(2)];
+    grid.labels  = {'Min','5%','Med','95%','Max','------------------','Thresh','Measured'}; % 1 x 8
+    grid.values  = [Q([1 2 3 4 5],:); nan(1,6); thr; listprops(chanorcomp,:)]; % 8 x 6
+        % Also store masks for the Measured row
+        grid.passMask = ~NotCardiac(chanorcomp,:);   % true = passed
+        grid.failMask = NotCardiac(chanorcomp,:);    % true = NotCardiac (fail)
+        rows(end+1) = struct('mode','textgrid', ...
+            'title',CARACASis, ...
+            'axprops',[], ...
+            'content',grid);
     else
         rejfields = {
             'icaautocorr'       'LoAC'   colors{2}
@@ -288,49 +335,191 @@ for i = 1:numel(computed)
             'icachancorrHEOG'   'CorrH'         colors{1}
             'icachancorrchans'  'CorrC'         colors{3}
             };
-        if isempty(toPlot)
-            toPlot{1} = {};
-            toPlot_axprops{1} = {};
-            toPlot_title{1} = 'SASICA';
+        % initialize SASICA aggregated row on first encounter
+        if ~sasica_has
+            sasica_values = {};
+            sasica_axprops = {};
+            sasica_title = 'SASICA';
+            sasica_has = true;
         end
         switch computed{i}
             case 'icaautocorr'
-                toPlot{1}{end+1} = 2 - (EEG.reject.SASICA.(computed{i})(chanorcomp) +1)/(EEG.reject.SASICA.(computedthresh{i}) +1);
+                sasica_values{end+1} = 2 - (EEG.reject.SASICA.(computed{i})(chanorcomp) +1)/(EEG.reject.SASICA.(computedthresh{i}) +1);
             case 'icaSNR'
-                toPlot{1}{end+1} = EEG.reject.SASICA.(computedthresh{i})/EEG.reject.SASICA.(computed{i})(chanorcomp);
+                sasica_values{end+1} = EEG.reject.SASICA.(computedthresh{i})/EEG.reject.SASICA.(computed{i})(chanorcomp);
             otherwise
-                toPlot{1}{end+1} = EEG.reject.SASICA.(computed{i})(:,chanorcomp)/EEG.reject.SASICA.(computedthresh{i});
+                sasica_values{end+1} = EEG.reject.SASICA.(computed{i})(:,chanorcomp)/EEG.reject.SASICA.(computedthresh{i});
         end
         SXticks{end+1} = rejfields{strcmp(computed{i},rejfields(:,1)),2};
         co(end+1,:) = rejfields{strcmp(computed{i},rejfields(:,1)),3};
     end
 end
-if not(isempty(SXticks))
-    toPlot_axprops{1} = {toPlot_axprops{1}{:} 'ylim' [0 2]...
+if ~isempty(SXticks)
+    sasica_axprops = {sasica_axprops{:} 'ylim' [0 2] ...
         'ytick' [1 2] ...
         'yticklabel' {'Th' '2*Th'} ...
         'xtick' 1:numel(SXticks) ...
-        'Xticklabel' SXticks...
-        'xlim',[.5 numel(SXticks)+.5],...
+        'Xticklabel' SXticks ...
+        'xlim',[.5 numel(SXticks)+.5], ...
         'colororder',co};
+    rows(end+1) = struct('mode','bar', ...
+        'title',sasica_title, ...
+        'axprops',{sasica_axprops}, ...
+        'content',{sasica_values});
 end
 
-p(2,2).pack('v',numel(toPlot));
+p(2,2).pack('v',numel(rows));
 p(2,2).de.margintop = 0;
-for i = 1:numel(toPlot)
+% Resolve a concrete monospace font from root mapping once (cross-platform)
+fw = get(groot,'FixedWidthFontName');
+if isempty(fw)
+    fw = 'Courier';
+end
+% Prefer an actually installed font; try common monospace fallbacks
+try
+    avail = listfonts;
+    if ~any(strcmpi(avail, fw))
+        candidates = {'DejaVu Sans Mono','Consolas','Menlo','Monaco', ...
+                      'Courier New','Liberation Mono','Lucida Console','Courier','Monospace'};
+        hit = find(ismember(lower(candidates), lower(avail)), 1, 'first');
+        if ~isempty(hit)
+            fw = candidates{hit};
+        end
+    end
+catch %#ok<CTCH>
+    % listfonts may fail in some headless environments; keep fw as-is
+end
+for i = 1:numel(rows)
     p(2,2,i).pack('h',{.2 []});
     p(2,2,i,1).select();
-    text(1.1,0.5,strjust(strwrap(toPlot_title{i},15),'right'),'horizontalalignment','right');
+    text(1.1,0.5,strjust(strwrap(rows(i).title,15),'right'),'horizontalalignment','right');
     axis off
     p(2,2,i,2).select()
     hold on
-    set(gca,toPlot_axprops{i}{:});
-    cs = get(gca,'colorOrder');
-    for j = 1:numel(toPlot{i})
-        xj = linspace(j-(numel(toPlot{i}{j})>1)*.3,j+(numel(toPlot{i}{j})>1)*.3,numel(toPlot{i}{j}));
-        bar(xj,toPlot{i}{j},'facecolor',cs(rem(j-1,size(cs,1))+1,:));
+    if ~isempty(rows(i).axprops)
+        set(gca,rows(i).axprops{:});
     end
-    hline(1,':k')
+    cs = get(gca,'colorOrder');
+    if strcmp(rows(i).mode,'bar')
+        for j = 1:numel(rows(i).content)
+            xj = linspace(j-(numel(rows(i).content{j})>1)*.3, ...
+                          j+(numel(rows(i).content{j})>1)*.3, ...
+                          numel(rows(i).content{j}));
+            bar(xj,rows(i).content{j},'facecolor',cs(rem(j-1,size(cs,1))+1,:));
+        end
+        hline(1,':k')
+    elseif strcmp(rows(i).mode,'text') % simple text block
+        axis on
+        ylim([0 max(1,numel(rows(i).content)+0.5)])
+        yticks([]); xticks([]);
+        for j = 1:numel(rows(i).content)
+            text(0.01,j,rows(i).content{j},'color',cs(rem(j-1,size(cs,1))+1,:), 'Interpreter','none','FontName',fw);
+        end
+    else % textgrid mode (zero font dependency)
+        axis on
+        yticks([]); xticks([]);
+        % Gather grid
+        grid = rows(i).content;
+        headers = grid.headers;              % 1 x M
+        labels  = grid.labels;               % 1 x R
+        values  = grid.values;               % R x M
+        passMask = [];
+        if isfield(grid,'passMask')
+            passMask = grid.passMask; % 1 x M logical
+        end
+        failMask = [];
+        if isfield(grid,'failMask')
+            failMask = grid.failMask; % 1 x M logical
+        end
+        M = numel(headers);
+        R = numel(labels);
+        % Build strings for measurement (tolerate NaN for separator rows)
+        numstr = cell(R,M);
+        for jj=1:M
+            for rr=1:R
+                v = values(rr,jj);
+                if isnan(v)
+                    numstr{rr,jj} = '-----';
+                else
+                    numstr{rr,jj} = sprintf('%.3f', v);
+                end
+            end
+        end
+        % Fit font size to axis width/height using measured extents
+        padx = 0.01; % normalized inter-column padding
+        leftMargin = 0.00; rightMargin = 0.0; topMargin = 0.02; bottomMargin = 0.02;
+        availW = 1 - leftMargin - rightMargin;
+        availH = 1 - topMargin - bottomMargin;
+        fontsize = 10; minsize = 7;
+        colw = zeros(1,M+1); % label column + M measure columns
+        lineh = 0.05; %#ok<NASGU>
+        while true
+            % Measure label column width (max of header label placeholder and row labels)
+            wmax = 0; hmax = 0;
+            t = text('Units','normalized','Position',[0 0], 'String','Label', 'Visible','off','FontSize',fontsize); e = get(t,'Extent'); wmax = max(wmax, e(3)); hmax = max(hmax, e(4)); delete(t);
+            for rr=1:R
+                t = text('Units','normalized','Position',[0 0], 'String',labels{rr}, 'Visible','off','FontSize',fontsize); e = get(t,'Extent'); wmax = max(wmax, e(3)); hmax = max(hmax, e(4)); delete(t);
+            end
+            colw(1) = wmax;
+            lineh = hmax*1.2; % add some vertical spacing
+            % Measure each measure column: header + all numbers
+            for jj=1:M
+                wmax = 0;
+                t = text('Units','normalized','Position',[0 0], 'String',headers{jj}, 'Visible','off','FontSize',fontsize); e = get(t,'Extent'); wmax = max(wmax, e(3)); delete(t);
+                for rr=1:R
+                    t = text('Units','normalized','Position',[0 0], 'String',numstr{rr,jj}, 'Visible','off','FontSize',fontsize); e = get(t,'Extent'); wmax = max(wmax, e(3)); delete(t);
+                end
+                colw(jj+1) = wmax;
+            end
+            totalW = sum(colw) + (numel(colw)-1)*padx;
+            totalH = lineh * (R+1); % header + rows
+            if (totalW <= availW && totalH <= availH) || fontsize <= minsize
+                break;
+            else
+                fontsize = fontsize - 1;
+            end
+        end
+        % Compute x positions for columns
+        xcol = zeros(1,M+1); xcol(1) = leftMargin;
+        for jj=2:M+1
+            xcol(jj) = xcol(jj-1) + colw(jj-1) + padx;
+        end
+        % Compute y positions for header and rows (top to bottom)
+        yHeader = 1 - topMargin; % start near top
+        ystep = lineh;
+        % Colors: first column labels use gray, measure columns use color order
+        labelColor = [.2 .2 .2];
+        % Draw headers
+            % empty placeholder at label column (keeps alignment)
+            text('Units','normalized','Position',[xcol(1) yHeader], 'String','', 'HorizontalAlignment','left','VerticalAlignment','top','FontSize',fontsize,'Interpreter','none','Color',labelColor);
+            % Draw headers in neutral label color (columns drawn black by default)
+            for jj=1:M
+                text('Units','normalized','Position',[xcol(jj+1) yHeader], 'String',headers{jj}, 'HorizontalAlignment','left','VerticalAlignment','top','FontSize',fontsize,'Interpreter','none','Color',labelColor);
+            end
+        % Draw rows
+        % Find measured row index if present
+        % Robustly detect 'Measured' row; fallback to last row
+        measuredIdx = find(cellfun(@(s) strcmpi(strtrim(s),'Measured'), labels),1);
+        if isempty(measuredIdx)
+            measuredIdx = R;
+        end
+        for rr=1:R
+            y = yHeader - rr*ystep;
+            text('Units','normalized','Position',[xcol(1) y], 'String',labels{rr}, 'HorizontalAlignment','left','VerticalAlignment','top','FontSize',fontsize,'Interpreter','none','Color',labelColor);
+            for jj=1:M
+                % default: neutral for all cells
+                col = labelColor;
+                if rr==measuredIdx
+                    if ~isempty(failMask) && failMask(jj)
+                        col = [1 0 0];
+                    elseif ~isempty(passMask) && ~passMask(jj)
+                        col = [1 0 0];
+                    end
+                end
+                text('Units','normalized','Position',[xcol(jj+1) y], 'String',numstr{rr,jj}, 'HorizontalAlignment','left','VerticalAlignment','top','FontSize',fontsize,'Interpreter','none','Color',col);
+            end
+        end
+    end
 end
 
 %%% open an eegplot when clicking on ERPimage
@@ -356,7 +545,7 @@ if ishandle(winhandle)
     set(gcf,'CloseRequestFcn',[command_close_eegplot command_close_eegplot2 'delete(gcf);']);
     % CANCEL button
     % -------------
-    h  = uicontrol(gcf, 'Style', 'pushbutton', 'backgroundcolor', GUIBUTTONCOLOR, 'string', 'Cancel', 'Units','Normalized','Position',[-10 -10 15 6].*s+q, 'callback', ['close(gcf);']);
+    uicontrol(gcf, 'Style', 'pushbutton', 'backgroundcolor', GUIBUTTONCOLOR, 'string', 'Cancel', 'Units','Normalized','Position',[-10 -10 15 6].*s+q, 'callback', ['close(gcf);']);
 
     %     % VALUE button
     %     % -------------
@@ -398,11 +587,11 @@ if ishandle(winhandle)
     end;
     command = [ command 'close(gcf); clear tmpstatus;' ];
 
-    h  = uicontrol(gcf, 'Style', 'pushbutton', 'string', 'OK', 'backgroundcolor', GUIBUTTONCOLOR, 'Units','Normalized', 'Position',[90 -10 15 6].*s+q, 'callback', command);
+    uicontrol(gcf, 'Style', 'pushbutton', 'string', 'OK', 'backgroundcolor', GUIBUTTONCOLOR, 'Units','Normalized', 'Position',[90 -10 15 6].*s+q, 'callback', command);
 
-    com = sprintf('pop_prop( %s, %d, %d, 0, %s);', inputname(1), typecomp, chanorcomp, vararg2str( { spec_opt } ) );
+    % command string not used (no output arg)
 else
-    com = sprintf('pop_prop( %s, %d, %d, NaN, %s);', inputname(1), typecomp, chanorcomp, vararg2str( { spec_opt } ) );
+    % command string not used (no output arg)
 end;
 
 return;
@@ -447,7 +636,7 @@ function out = nan_mean(in)
 
 nans = find(isnan(in));
 in(nans) = 0;
-sums = sum(in);
+% sums = sum(in); % unused
 nonnans = ones(size(in));
 nonnans(nans) = 0;
 nonnans = sum(nonnans);

@@ -89,6 +89,10 @@ if ischar(cfg) && strncmp(cfg,'pop_',4)
         set(findobj('-regexp','name', 'SASICA 1$'),'userdata',tmpEEG);
         clear tmpEEG
     catch ME
+        delete(findobj('-regexp','name','pop_selectcomps.* -- SASICA'));
+        delete(findobj('-regexp','name','pop_prop.* -- SASICA'));
+        delete(findobj('-regexp','name','Automatic component rejection measures'));
+
         disp('================================');
         disp('================================');
         disp('ERROR. Please send the entire error message below to max.chaumon@gmail.com. Thanks for your help!');
@@ -126,6 +130,7 @@ rejfields = {'icarejautocorr' 'Autocorrelation' [         0         0    1.0000]
     'icarejchancorr' 'Correlation with channels' [    0.7500    0.7500         0]
     'icarejADJUST' 'ADJUST selections' [    .3 .3 .3]
     'icarejFASTER' 'FASTER selections' [    0 .7 0]
+    'icarejCARACAS' 'CARACAS selections' [0.22745     0.37255     0.80392]
     };
 
 ncomp= size(EEG.icawinv,2); % ncomp is number of components
@@ -691,7 +696,102 @@ if cfg.FASTER.enable
     end
     %----------------------------------------------------------------
 end
+if cfg.CARACAS.enable
+    % Add CARACAS heart functions to path
+    addpath(fullfile(fileparts(which('eeg_SASICA')),'CARACAS'));
+    addpath(fullfile(fileparts(which('eeg_SASICA')),'CARACAS','heart_functions'));
+    rejects(9) = 1;
+    disp('CARACAS methods selection')
+    %% CARACAS
+    struct2ws(cfg.CARACAS);
+    if ~nocompute
 
+
+        meas = struct([]);
+        NotCardiac = false(ncomp,5);
+        for i_comp = 1:ncomp
+            ECG_candidate = [icaacts(i_comp,:,:) NaN(1,1100,size(icaacts,3))];
+            ECG_candidate = ECG_candidate(:)';
+            ft_warning('off','FieldTrip:dataContainsNaN');
+
+            [HeartBeats] = heart_peak_detect(ECG_candidate, EEG.srate, cfg_peak);
+            
+            ft_warning('on','FieldTrip:dataContainsNaN')
+
+            %%
+            R_idx = [HeartBeats.R_sample];
+            if isempty(R_idx)
+                Rpeaks = NaN;
+            else
+                Rpeaks = median(abs(ECG_candidate(R_idx)),'omitmissing');
+            end
+
+            PeaktoNoiseDelay = 50; % in ms
+            PeaktoNoiseDelaySamp = round(PeaktoNoiseDelay / 1000 * EEG.srate);
+
+            RNoiseVals = [];
+            if numel(R_idx) >= 2
+                idx_starts = R_idx(1:end-1) + PeaktoNoiseDelaySamp;
+                idx_ends   = R_idx(2:end)   - PeaktoNoiseDelaySamp;
+                % keep only valid ranges within signal and with start<end
+                idx_starts = max(1, idx_starts);
+                idx_ends   = min(numel(ECG_candidate), idx_ends);
+                valid = idx_ends > idx_starts;
+                for id = find(valid)
+                    RNoiseVals = [RNoiseVals ECG_candidate(idx_starts(id):idx_ends(id))]; %#ok<AGROW>
+                end
+            end
+            
+            RNoise = median(abs(RNoiseVals), 'omitmissing');
+
+            meas(i_comp).RPeakstoNoise = Rpeaks / RNoise;
+%%
+            meas(i_comp).sk = HeartBeats.sk;
+            if meas(i_comp).sk < cfg.CARACAS.thresh_sk
+                NotCardiac(i_comp,1) = 1;
+            end
+            meas(i_comp).ku = HeartBeats.ku;
+            if meas(i_comp).ku < cfg.CARACAS.thresh_ku
+                NotCardiac(i_comp,2) = 1;
+            end
+
+            RR_intervals = diff([HeartBeats.R_time]);
+            low_threshold = prctile(RR_intervals, cfg.CARACAS.prctl_RR(1));
+            high_threshold = prctile(RR_intervals, cfg.CARACAS.prctl_RR(2));
+            filtered_RR_intervals = RR_intervals(RR_intervals >= low_threshold & RR_intervals <= high_threshold);
+            meas(i_comp).RR = std(filtered_RR_intervals) / mean(filtered_RR_intervals);
+            if  meas(i_comp).RR > cfg.CARACAS.thresh_RR
+                NotCardiac(i_comp,3) = 1;
+            end
+
+            Rampl = abs(ECG_candidate([HeartBeats.R_sample]));
+            low_threshold = prctile(Rampl, cfg.CARACAS.prctl_Rampl(1));
+            high_threshold = prctile(Rampl, cfg.CARACAS.prctl_Rampl(2));
+            filtered_Rampl = Rampl(Rampl >= low_threshold & Rampl <= high_threshold);
+            meas(i_comp).Rampl = std(filtered_Rampl) / abs(mean(filtered_Rampl));
+            if  meas(i_comp).Rampl > cfg.CARACAS.thresh_Rampl
+                NotCardiac(i_comp,4) = 1;
+            end
+
+            meas(i_comp).bpm = numel(HeartBeats) / (sum(~isnan(ECG_candidate) / EEG.srate) / 60);
+            if meas(i_comp).bpm < cfg.CARACAS.thresh_bpm(1) || meas(i_comp).bpm > cfg.CARACAS.thresh_bpm(2)
+                NotCardiac(i_comp,5) = 1;
+            end
+            meas(i_comp).NotCardiac = NotCardiac(i_comp,:);
+        end
+        rej = true(1,size(icaacts,1));
+        rej(any(NotCardiac,2)) = 0;
+        
+        EEG.reject.SASICA.(strrep(rejfields{9,1},'rej','')) = meas;
+        EEG.reject.SASICA.([strrep(rejfields{9,1},'rej','')])(1).cfg = cfg.CARACAS;
+        EEG.reject.SASICA.(rejfields{9,1}) = rej;
+        CARACAS.rej = rej;
+        CARACAS.meas = meas;
+    else
+        CARACAS = EEG.reject.SASICA.(strrep(rejfields{9,1},'rej',''));
+    end
+    %----------------------------------------------------------------
+end
 EEG.reject.SASICA.var = var(EEG.icaact(:,:),[],2);% variance of each component
 
 if (cfg.ADJUST.enable||cfg.FASTER.enable) && any(~noplot)
@@ -741,10 +841,10 @@ if ~noplotselectcomps
             set(okbutt,'callback','uiresume(findobj(''-regexp'',''name'', ''SASICA 1$''));');
             % find the cancel button and change its callback fcn
             cancelbutt = findobj(hfig(ifig),'string','Cancel');
-            closecallback = ['tmpEEG = get(findobj(''-regexp'',''name'', ''SASICA 1$''),''userdata'');tmpEEG.reject.gcompreject = false(size(tmpEEG.reject.gcompreject));disp(''Operation cancelled. No component is selected for rejection.'');set(findobj(''-regexp'',''name'', ''SASICA 1$''),''userdata'',tmpEEG);clear tmpEEG;'...
-                'uiresume(gcf);'];
+            closecallback = ['hfig1 = findobj(''-regexp'',''name'', ''SASICA 1$'');tmpEEG = get(hfig1,''userdata'');tmpEEG.reject.gcompreject = false(size(tmpEEG.reject.gcompreject));disp(''Operation cancelled. No component is selected for rejection.'');set(hfig1,''userdata'',tmpEEG);clear tmpEEG;'...
+                'uiresume(hfig1);clear hfig1;'];
             set(cancelbutt,'callback',closecallback );
-            set(hfig(ifig),'closerequestfcn','disp(''Operation cancelled. No component is selected for rejection.''); delete(findobj(''-regexp'',''name'',''pop_selectcomps.* -- SASICA''));')
+            set(hfig(ifig),'closerequestfcn',closecallback)
             % crazy thing to find and order the axes for the topos.
             ax{ifig} = findobj(hfig(ifig),'type','Axes');
             ax{ifig} = ax{ifig}(end-1:-1:1);% erase pointer to the big axis behind all others and reorder the axes handles.
@@ -808,7 +908,7 @@ if ~noplotselectcomps
         if ishandle(hfig(1))
             EEG = get(hfig(1),'userdata');
         else
-            EEG = struct('reject',struct('gcompreject',[]));
+            EEG.reject.gcompreject = [];
         end
         delete(findobj('-regexp','name','pop_selectcomps.* -- SASICA'));
         delete(findobj('-regexp','name','Automatic component rejection measures'));
@@ -894,9 +994,26 @@ if isstruct(s) && not(isempty(s))
     end
 elseif not(isempty(s))
     s = s;
-elseif isempty(s);
+elseif isempty(s)
     s = d;
 end
 
 function res = existnotempty(s,f)
 res = isfield(s,f) && not(isempty(s.(f)));
+
+function interval = gimme_interval(l, HeartBeats)
+
+intervals_sec = [HeartBeats.([l(1) '_time'])] - [HeartBeats.([l(2) '_time'])];
+
+% figure;
+% hist(intervals_sec)
+
+low_threshold = prctile(intervals_sec, 15);
+high_threshold = prctile(intervals_sec, 85);
+
+filtered_intervals = intervals_sec(intervals_sec >= low_threshold & intervals_sec <= high_threshold);
+
+% figure;
+% hist(filtered_intervals);
+interval = std(filtered_intervals)/(abs(mean(filtered_intervals)));
+
