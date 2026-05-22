@@ -41,6 +41,13 @@
 %                               Thresholding for EEG artifact Rejection.
 %                               Journal of Neuroscience Methods, 192(1),
 %                               152Ã¢ÂÂ162. doi:16/j.jneumeth.2010.07.015)
+%              CARACAS selection: detects cardiac artifact components
+%                               without requiring an ECG recording. Runs PQRST 
+%                               peak detection on each IC timecourse and flags
+%                               components whose peaks show physiologically 
+%                               implausible skewness, kurtosis, RR-interval 
+%                               regularity, R-amplitude consistency, and heart
+%                               rate (bpm) as *non cardiac*.
 %
 %   >> [EEG com] = SASICA( [], 'key', 'val');
 %       Takes optional key val pairs to set specific options from the
