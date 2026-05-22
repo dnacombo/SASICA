@@ -697,6 +697,9 @@ if cfg.FASTER.enable
     %----------------------------------------------------------------
 end
 if cfg.CARACAS.enable
+    % Add CARACAS heart functions to path
+    addpath(fullfile(fileparts(which('eeg_SASICA')),'CARACAS'));
+    addpath(fullfile(fileparts(which('eeg_SASICA')),'CARACAS','heart_functions'));
     rejects(9) = 1;
     disp('CARACAS methods selection')
     %% CARACAS
